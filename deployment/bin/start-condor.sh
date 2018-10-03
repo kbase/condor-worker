@@ -12,4 +12,8 @@ if [ "$SET_NOBODY_USER_GUID" ] ; then
     usermod -a -G "kbase" nobody
 fi
 
+if [ "$SET_NOBODY_USER_UID" ] ; then
+    usermod -u "$SET_NOBODY_USER_UID" nobody -o
+fi
+
 exec $(condor_config_val MASTER) -f -t 2>&1 
