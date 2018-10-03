@@ -8,6 +8,8 @@ fi
 
 if [ "$SET_NOBODY_USER_GUID" ] ; then
     usermod -a -G "$SET_NOBODY_USER_GUID" nobody
+# For backwards compatibility for directories already created by the kbase user
+    usermod -a -G "kbase" nobody
 fi
 
 exec $(condor_config_val MASTER) -f -t 2>&1 
