@@ -1,0 +1,20 @@
+# Set this to be how many slots each user can have on this machine
+MAX_SLOTS_PER_ACCTGRP = 1
+
+# Tell the startd to cross-advertise AccountingGroup and Activity into each
+# slot, so every slot will have slot1_AccountingGroup, slot2_AccountingGroup, etc.
+STARTD_SLOT_ATTRS = $(STARTD_SLOT_ATTRS) AccountingGroup Activity CLIENTGROUP 
+
+# You will unfortunately need to extend this expression if you have more
+# than five slots... just follow the pattern.
+SLOTS_SERVING_THIS_ACCTGRP = ( \
+(TARGET.AccountingGroup =?= splitUserName(slot1_AccountingGroup)[0] && slot1_Activity == "Busy") + \
+(TARGET.AccountingGroup =?= splitUserName(slot2_AccountingGroup)[0] && slot2_Activity == "Busy") + \
+(TARGET.AccountingGroup =?= splitUserName(slot3_AccountingGroup)[0] && slot3_Activity == "Busy") + \
+(TARGET.AccountingGroup =?= splitUserName(slot4_AccountingGroup)[0] && slot4_Activity == "Busy") + \
+(TARGET.AccountingGroup =?= splitUserName(slot5_AccountingGroup)[0] && slot5_Activity == "Busy") + \
+0 )
+
+# Append to Start expression to only start jobs if this user is under
+# the limit for this machine.
+START = $(START) && ( $(SLOTS_SERVING_THIS_ACCTGRP) < $(MAX_SLOTS_PER_ACCTGRP) )
