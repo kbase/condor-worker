@@ -40,6 +40,7 @@ KILL = False
 {{ if .Env.NUM_SLOTS -}} NUM_SLOTS = {{ .Env.NUM_SLOTS }} {{- end }}
 CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
+STARTD_RECOMPUTE_DISK_FREE = true
 STARTD_ATTRS = CLIENTGROUP
 
 CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}
