@@ -18,9 +18,11 @@ fi
 
 if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
     mkdir -p $CONDOR_SUBMIT_WORKDIR
+    chmod 01777 $CONDOR_SUBMIT_WORKDIR
 else
     mkdir -p /mnt/awe/condor/condor_job_execute
+    chmod 01777 /mnt/awe/condor/condor_job_execute
 fi
 
 
-exec /usr/sbin/condor_master -f -t 2>&1 
+$(condor_config_val MASTER) -f -t-f -t 2>&1 
