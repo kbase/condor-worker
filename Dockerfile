@@ -12,13 +12,19 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
 RUN yum -y update && yum -y install -y wget which git deltarpm && \
 yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel 
 
-
 # Install Condor
 RUN cd /etc/yum.repos.d && \
 wget http://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-development-rhel7.repo && \
 wget http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
 rpm --import RPM-GPG-KEY-HTCondor && \
 yum -y install condor
+
+# Install HTCondor Python Bindings
+RUN cd /root && \
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python get-pip.py && \
+    pip install htcondor  && \
+    rm /root/get-pip.py
 
 # Mount for cgroups
 VOLUME [ "/sys/fs/cgroup" ]
