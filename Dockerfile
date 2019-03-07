@@ -53,7 +53,6 @@ RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/c
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
