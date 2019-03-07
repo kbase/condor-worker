@@ -17,7 +17,7 @@ if [ "$SET_NOBODY_USER_UID" ] ; then
 fi
 
 if [ "$condor_submit_workdir" ] ; then
-    mkdir -p $ condor_submit_workdir
+    mkdir -p $condor_submit_workdir
 else
     mkdir -p /mnt/awe/condor/condor_job_execute
 fi
