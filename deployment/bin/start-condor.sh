@@ -16,8 +16,8 @@ if [ "$SET_NOBODY_USER_UID" ] ; then
     usermod -u "$SET_NOBODY_USER_UID" nobody -o
 fi
 
-if [ "$condor_submit_workdir" ] ; then
-    mkdir -p $condor_submit_workdir
+if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
+    mkdir -p $CONDOR_SUBMIT_WORKDIR
 else
     mkdir -p /mnt/awe/condor/condor_job_execute
 fi
