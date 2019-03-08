@@ -1,6 +1,15 @@
 FROM centos:7
 ENV container docker
 
+# Get commonly used utilities
+RUN yum -y update && yum -y install -y wget which git deltarpm 
+
+# Install docker binaries 
+RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
+
+# Get Java
+RUN yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel 
+
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
     mkdir -p /kb/deployment/bin && \
@@ -8,42 +17,40 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
     touch /kb/deployment/jettybase/logs/request.log && \
     chown -R kbase /kb/deployment
 
-# Get commonly used utilities
-RUN yum -y update && yum -y install -y wget which git deltarpm && \
-yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel 
+#INSTALL DOCKERIZE
+RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
 
+
+# Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
+RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
 
 # Install Condor
 RUN cd /etc/yum.repos.d && \
-wget https://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-stable-rhel7.repo && \
+wget http://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-development-rhel7.repo && \
 wget http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
 rpm --import RPM-GPG-KEY-HTCondor && \
-yum -y install condor
+yum -y install condor-all
 
-# Mount for cgroups
-VOLUME [ "/sys/fs/cgroup" ]
+# Install HTCondor Python Bindings
+RUN cd /root && \
+    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
+    python get-pip.py && \
+    pip install htcondor  && \
+    rm /root/get-pip.py
+
+#ADD DIRS
+RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
 
 # These ARGs values are passed in via the docker build command
 ARG BUILD_DATE
 ARG VCS_REF
 ARG BRANCH=develop
 
-
-#INSTALL DOCKERIZE
-RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
-
-# Install docker binaries (setsebool:  SELinux is disabled. libsemanage.semanage_commit_sandbox: Error while renaming /etc/selinux/targeted/active to /etc/selinux/targeted/previous. (Invalid cross-device link).)
-RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
-# Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
-RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
-
-#ADD DIRS
-RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
+# Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
+RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-# Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
-# RUN rm -rf /var/cache/yum
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
