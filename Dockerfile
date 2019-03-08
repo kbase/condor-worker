@@ -37,17 +37,13 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 # Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
 RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
 
-# Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
-# RUN rm -rf /var/cache/yum
-
 #ADD DIRS
 RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
-#RUN touch /var/log/condor/StartLog /var/log/condor/ProcLog && chmod 778 /var/log/condor/* /var/lock/condor 
-#RUN chown -R kbase:kbase /etc/condor /run/condor /var/lock/condor /var/log/condor /var/lib/condor/execute /var/log/condor/StartLog /var/log/condor/ProcLog
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-
+# Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
+# RUN rm -rf /var/cache/yum
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
