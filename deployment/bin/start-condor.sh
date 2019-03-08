@@ -24,5 +24,4 @@ else
     chmod 01777 /mnt/awe/condor/condor_job_execute
 fi
 
-
-$(condor_config_val MASTER) -f -t-f -t 2>&1 
+exec $(condor_config_val MASTER) -f -t 2>&1 
