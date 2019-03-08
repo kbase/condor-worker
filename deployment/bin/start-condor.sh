@@ -15,4 +15,13 @@ fi
 if [ "$SET_NOBODY_USER_UID" ] ; then
     usermod -u "$SET_NOBODY_USER_UID" nobody -o
 fi
+
+if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
+    mkdir -p $CONDOR_SUBMIT_WORKDIR
+    chmod 01777 $CONDOR_SUBMIT_WORKDIR
+else
+    mkdir -p /mnt/awe/condor/condor_job_execute
+    chmod 01777 /mnt/awe/condor/condor_job_execute
+fi
+
 exec $(condor_config_val MASTER) -f -t 2>&1 
