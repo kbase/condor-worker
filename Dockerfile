@@ -15,7 +15,7 @@ yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel
 
 # Install Condor
 RUN cd /etc/yum.repos.d && \
-wget http://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-development-rhel7.repo && \
+wget https://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-stable-rhel7.repo && \
 wget http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
 rpm --import RPM-GPG-KEY-HTCondor && \
 yum -y install condor
