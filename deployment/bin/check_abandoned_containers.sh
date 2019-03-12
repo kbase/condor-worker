@@ -4,6 +4,7 @@
 
 while true
 do
+    hostname=`hostname`
     webhook_url=${SLACK_WEBHOOK_URL}
     running="2"
     running_containers=`docker ps | grep dockerhub | cut -f1 -d' '`
@@ -16,10 +17,10 @@ do
 
         if [[ ${last_job_status} = 2 ]];
         then
-            message="container_id $condor_id $last_job_status $remote_host $last_remote_host running"
+            message="container_id ${condor_id} ${last_job_status} ${remote_host} ${last_remote_host} running"
         else
-            message="DOCKER_ID:$container_id CONDOR_ID:$condor_id STATUS:$last_job_status HOST:$remote_host $last_remote_host container is abandoned"
-            curl -X POST -H 'Content-type: application/json' --data "{'text':'$message'}" $webhook_url
+            message="DOCKER_ID:${container_id} CONDOR_ID:${condor_id} STATUS:${last_job_status} HOST:${remote_host} ${last_remote_host} (${hostname}) container is abandoned"
+            curl -X POST -H 'Content-type: application/json' --data "{'text':'${message}'}" $webhook_url
             #docker stop $container && docker container rm -v $container
         fi
     done
