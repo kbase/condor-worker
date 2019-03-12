@@ -18,7 +18,7 @@ do
         then
             message="container_id $condor_id $last_job_status $remote_host $last_remote_host running"
         else
-            message="DOCKER_ID:container_id CONDOR_ID:$condor_id STATUS:$last_job_status HOST:$remote_host $last_remote_host container is abandoned"
+            message="DOCKER_ID:$container_id CONDOR_ID:$condor_id STATUS:$last_job_status HOST:$remote_host $last_remote_host container is abandoned"
             curl -X POST -H 'Content-type: application/json' --data "{'text':'$message'}" $webhook_url
             #docker stop $container && docker container rm -v $container
         fi
