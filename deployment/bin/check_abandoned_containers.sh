@@ -2,11 +2,13 @@
 #This script is used to find abandoned containers running on a condor worker.
 #It requires a webhook URL environmental variable in order to send a notification to a slack channel
 
+delete=${DELETE_ABANDONDED_CONTAINERS}
+webhook_url=${SLACK_WEBHOOK_URL}
+hostname=`hostname`
+running="2"
+
 while true
 do
-    hostname=`hostname`
-    webhook_url=${SLACK_WEBHOOK_URL}
-    running="2"
     running_containers=`docker ps | grep dockerhub | cut -f1 -d' '`
     for container_id in ${running_containers}
     do
@@ -21,7 +23,10 @@ do
         else
             message="DOCKER_ID:${container_id} CONDOR_ID:${condor_id} STATUS:${last_job_status} HOST:${remote_host} ${last_remote_host} (${hostname}) container is abandoned"
             curl -X POST -H 'Content-type: application/json' --data "{'text':'${message}'}" $webhook_url
-            #docker stop $container && docker container rm -v $container
+            if [[ ${delete} = true ]];
+            then
+                docker stop $container && docker container rm -v $container
+            fi
         fi
     done
 sleep 60
