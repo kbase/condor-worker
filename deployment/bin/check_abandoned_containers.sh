@@ -25,8 +25,8 @@ do
             curl -X POST -H 'Content-type: application/json' --data "{'text':'${message}'}" $webhook_url
             if [[ ${delete} = true ]];
             then
-                docker stop $container && docker container rm -v $container
-            fi
+                docker stop ${container_id} && docker container rm -v ${container_id}
+           fi
         fi
     done
 sleep 60
