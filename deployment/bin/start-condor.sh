@@ -24,6 +24,5 @@ else
     chmod 01777 /mnt/awe/condor/condor_job_execute
 fi
 
-/kb/deployment/check_abandoned_containers.sh &
-
-exec $(condor_config_val MASTER) -f -t 2>&1 
+sh /kb/deployment/bin/check_abandoned_containers.sh
+exec $(condor_config_val MASTER) -f -t 2>&1
