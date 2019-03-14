@@ -37,8 +37,18 @@ PREEMPT = False
 KILL = False
 
 # Machine resource settings
-{{ if .Env.NUM_SLOTS -}} NUM_SLOTS = {{ .Env.NUM_SLOTS }} {{- end }}
+# {{ if .Env.NUM_SLOTS -}} NUM_SLOTS = {{ .Env.NUM_SLOTS }} {{- end }}
+
+# Dynamic Slots
+NUM_SLOTS = 1
+NUM_SLOTS_TYPE_1 = 1
+SLOT_TYPE_1 = 100%
+SLOT_TYPE_1_PARTITIONABLE = TRUE
+CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }}
+STARTD_RECOMPUTE_DISK_FREE = true 
+ 
 CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
+
 
 STARTD_ATTRS = CLIENTGROUP
 

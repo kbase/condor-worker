@@ -16,4 +16,13 @@ if [ "$SET_NOBODY_USER_UID" ] ; then
     usermod -u "$SET_NOBODY_USER_UID" nobody -o
 fi
 
-exec $(condor_config_val MASTER) -f -t 2>&1 
+if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
+    mkdir -p $CONDOR_SUBMIT_WORKDIR
+    chmod 01777 $CONDOR_SUBMIT_WORKDIR
+else
+    mkdir -p /mnt/awe/condor/condor_job_execute
+    chmod 01777 /mnt/awe/condor/condor_job_execute
+fi
+
+sh /kb/deployment/bin/check_abandoned_containers.sh >> check_abandoned_containers.log 2>&1 &
+exec $(condor_config_val MASTER) -f -t 2>&1
