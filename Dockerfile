@@ -55,8 +55,8 @@ ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
 
 #Install Python3 and Libraries
-RUN yum install -y centos-release-scl && yum install -y rh-python36 && yum update \
-&& pip install requests docker slackclient htcondor
+RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36 && pip install requests docker slackclient htcondor
+
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
 # the end
