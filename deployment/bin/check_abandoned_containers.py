@@ -6,7 +6,7 @@ import logging
 import os
 import subprocess
 import time
-
+import datetime
 import requests
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,7 +22,7 @@ while (True):
 
     try:
         cmd = "docker ps | grep dockerhub | cut -f1 -d' '"
-        running_containers = subprocess.check_output(cmd, shell=True)
+        running_containers = subprocess.check_output(cmd, shell=True, timeout=)
 
         container_ids = running_containers.split("\n")
         container_ids = filter(None, container_ids)
@@ -34,6 +34,8 @@ while (True):
         running_job_ids = filter(None, running_job_ids)
 
         logging.info(running_job_ids)
+
+        now = datetime.datetime.now()
 
         for container_id in container_ids:
 
@@ -51,11 +53,12 @@ while (True):
                     continue
 
                 if ujs_id not in running_job_ids:
-                    message = "container:[{}] job_id:[{}] condor_id:[{}] is dead ({})".format(
+                    message = "container:[{}] job_id:[{}] condor_id:[{}] is dead ({}) {} ".format(
                         container_id,
                         ujs_id,
                         condor_id,
-                        hostname)
+                        hostname,
+                        now)
 
                     slack_data = {'text': message}
 
@@ -69,7 +72,15 @@ while (True):
                                                                                    container_id)
                         logging.error(message)
                         logging.error(cmd)
-                        subprocess.check_output(cmd, shell=True)
+                        output = subprocess.check_output(cmd, shell=True)
+
+                        slack_data = {'text': 'docker rm output:' + str(output)}
+                        response = requests.post(
+                            webhook_url, data=json.dumps(slack_data),
+                            headers={'Content-Type': 'application/json'}
+                        )
+
+
 
                 elif ujs_id in running_job_ids:
                     logging.info("Job still running: " + ujs_id)
