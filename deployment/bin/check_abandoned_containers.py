@@ -75,14 +75,6 @@ while (True):
                         logging.error(cmd)
                         output = subprocess.check_output(cmd, shell=True)
 
-                        slack_data = {'text': 'docker rm output:' + str(output)}
-                        response = requests.post(
-                            webhook_url, data=json.dumps(slack_data),
-                            headers={'Content-Type': 'application/json'}
-                        )
-
-
-
                 elif ujs_id in running_job_ids:
                     logging.info("Job still running: " + ujs_id)
 
