@@ -1,12 +1,13 @@
 #!/usr/bin/env python
 # This script is used to find abandoned containers running on a condor worker.
 # It requires a webhook URL environmental variable in order to send a notification to a slack channel
+import datetime
 import json
 import logging
 import os
 import subprocess
 import time
-import datetime
+
 import requests
 
 logging.basicConfig(level=logging.DEBUG)
@@ -22,7 +23,7 @@ while (True):
 
     try:
         cmd = "docker ps | grep dockerhub | cut -f1 -d' '"
-        running_containers = subprocess.check_output(cmd, shell=True, timeout=)
+        running_containers = subprocess.check_output(cmd, shell=True)
 
         container_ids = running_containers.split("\n")
         container_ids = filter(None, container_ids)
@@ -48,7 +49,7 @@ while (True):
                     container_id)
                 condor_id = str(subprocess.check_output(cmd, shell=True).strip())
 
-                #Skip containers without a condor or worker id
+                # Skip containers without a condor or worker id
                 if len(ujs_id) == 0 and len(condor_id) == 0:
                     continue
 
