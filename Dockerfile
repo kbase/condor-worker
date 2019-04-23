@@ -8,7 +8,7 @@ RUN yum -y update && yum -y install -y wget which git deltarpm
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
 
 # Get Java
-RUN yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel 
+RUN yum install -y java-11-openjdk java-11-openjdk-devel 
 
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
