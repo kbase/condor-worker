@@ -10,6 +10,11 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 # Get Java
 RUN yum install -y java-11-openjdk java-11-openjdk-devel 
 
+
+#Install Python3 and Libraries
+RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36 && pip install requests docker slackclient htcondor
+
+
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
     mkdir -p /kb/deployment/bin && \
@@ -53,9 +58,6 @@ COPY --chown=kbase deployment/ /kb/deployment/
 
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
-
-#Install Python3 and Libraries
-RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36 && pip install requests docker slackclient htcondor
 
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
