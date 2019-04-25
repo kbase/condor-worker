@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 # This script is used to find abandoned containers running on a condor worker.
 # It requires a webhook URL environmental variable in order to send a notification to a slack channel
+import datetime
 import json
 import logging
 import os
@@ -35,6 +36,8 @@ while (True):
 
         logging.info(running_job_ids)
 
+        now = datetime.datetime.now()
+
         for container_id in container_ids:
 
             # Try catch here so the script can keep going
@@ -46,16 +49,17 @@ while (True):
                     container_id)
                 condor_id = str(subprocess.check_output(cmd, shell=True).strip())
 
-                #Skip containers without a condor or worker id
+                # Skip containers without a condor or worker id
                 if len(ujs_id) == 0 and len(condor_id) == 0:
                     continue
 
                 if ujs_id not in running_job_ids:
-                    message = "container:[{}] job_id:[{}] condor_id:[{}] is dead ({})".format(
+                    message = "container:[{}] job_id:[{}] condor_id:[{}] is dead ({}) {} ".format(
                         container_id,
                         ujs_id,
                         condor_id,
-                        hostname)
+                        hostname,
+                        now)
 
                     slack_data = {'text': message}
 
@@ -69,7 +73,7 @@ while (True):
                                                                                    container_id)
                         logging.error(message)
                         logging.error(cmd)
-                        subprocess.check_output(cmd, shell=True)
+                        output = subprocess.check_output(cmd, shell=True)
 
                 elif ujs_id in running_job_ids:
                     logging.info("Job still running: " + ujs_id)

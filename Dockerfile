@@ -8,7 +8,11 @@ RUN yum -y update && yum -y install -y wget which git deltarpm
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
 
 # Get Java
-RUN yum install -y java-1.8.0-openjdk java-1.8.0-openjdk-devel 
+RUN yum install -y java-11-openjdk java-11-openjdk-devel 
+
+#Install Python3 and Libraries
+RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36
+
 
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
@@ -31,13 +35,6 @@ wget http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
 rpm --import RPM-GPG-KEY-HTCondor && \
 yum -y install condor-all
 
-# Install HTCondor Python Bindings
-RUN cd /root && \
-    curl https://bootstrap.pypa.io/get-pip.py -o get-pip.py && \
-    python get-pip.py && \
-    pip install htcondor  && \
-    rm /root/get-pip.py
-
 #ADD DIRS
 RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
 
@@ -51,12 +48,9 @@ RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
+RUN /kb/deployment/bin/install_python_dependencies.sh
+
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
-
-
-#Install Python3 and Libraries
-RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36 && pip install requests docker slackclient htcondor
-
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
 # the end

@@ -49,7 +49,7 @@ CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }
  
 CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
-EXECUTE = {{ default .Env.condor_submit_workdir "/mnt/awe/condor" }}/condor_job_execute
+EXECUTE = {{ default .Env.condor_submit_workdir "/mnt/awe/condor" }}/condor_job_execute/$(HOSTNAME)/
 STARTD_RECOMPUTE_DISK_FREE = true 
 
 STARTD_ATTRS = CLIENTGROUP

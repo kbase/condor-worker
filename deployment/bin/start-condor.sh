@@ -17,11 +17,11 @@ if [ "$SET_NOBODY_USER_UID" ] ; then
 fi
 
 if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
-    mkdir -p $CONDOR_SUBMIT_WORKDIR
-    chmod 01777 $CONDOR_SUBMIT_WORKDIR
+    mkdir -p $CONDOR_SUBMIT_WORKDIR/$HOSTNAME
+    chmod 01777 $CONDOR_SUBMIT_WORKDIR/$HOSTNAME
 else
-    mkdir -p /mnt/awe/condor/condor_job_execute
-    chmod 01777 /mnt/awe/condor/condor_job_execute
+    mkdir -p /mnt/awe/condor/condor_job_execute/$HOSTNAME
+    chmod 01777 /mnt/awe/condor/condor_job_execute/$HOSTNAME
 fi
 
 check_script="/kb/deployment/bin/check_abandoned_containers.py"
