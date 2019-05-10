@@ -47,8 +47,8 @@ ARG BRANCH=develop
 RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
-
-RUN /kb/deployment/bin/install_python_dependencies.sh
+ 
+RUN yum install -y gcc && /kb/deployment/bin/install_python_dependencies.sh
 
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
