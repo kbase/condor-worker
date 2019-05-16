@@ -8,7 +8,7 @@ RUN yum -y update && yum update -y systemd && yum -y install -y wget which git d
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
 
 # Get Java
-RUN yum install -y java-11-openjdk java-11-openjdk-devel 
+RUN yum install -y java-11-openjdk java-11-openjdk-devel openjdk-11-jdk-headless
 
 #Install Python3 and Libraries
 RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36
