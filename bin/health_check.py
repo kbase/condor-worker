@@ -5,12 +5,31 @@ import sys
 import docker
 import pwd
 import logging
+import requests
 
 logging.basicConfig(level=logging.INFO)
 
-scratch = os.environ.get("SUBMIT_WORKDIR", "/mnt/awe/condor")
-fake = os.environ.get("SUBMIT_WORKDIR", "/mnt/awe/fake")
-var_lib_docker = os.environ.get("DOCKER_CACHE", "/dev/mapper/data-docker")
+# Up one level for scratch
+scratch = os.path.dirname(os.environ.get("SUBMIT_WORKDIR", "/mnt/awe/condor/condor_job_execute"))
+# Endpoint
+
+# TODO Fail if this variable is not defined for startD
+endpoint = os.environ.get("SERVICE_ENDPOINT", None)
+
+if endpoint is None:
+    raise Exception("SERVICES_ENDPOINT is not defined")
+
+services = {f"{endpoint}/auth": {},
+            f"{endpoint}/njs_wrapper": {"method": "NarrativeJobService.status", "version": "1.1",
+                                        "id": 1, "params": []},
+            f"{endpoint}/catalog": {"method": "Catalog.status", "version": "1.1", "id": 1,
+                                    "params": []},
+            f"{endpoint}/ws": {"method": "Workspace.status", "version": "1.1", "id": 1,
+                               "params": []},
+            }
+
+# Docker Cache
+var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
 
 user = "nobody"
 
@@ -55,16 +74,30 @@ def enoughSpace(mount_point, percentage):
     cmd = "/bin/df " + mount_point + " | awk '{ print $5 }' | tail -1 | cut -f1 -d'%'"
     space = 0
     try:
-        space =  subprocess.check_output(cmd, shell=True).decode()
+        space = subprocess.check_output(cmd, shell=True).decode()
         if int(space) < percentage:
             return
         else:
             logging.error(f"Can't access {mount_point} or not enough space {space}")
             sys.exit(2)
     except Exception as e:
-        logging.error(f"Can't access {mount_point} or not enough space {space}"  + str(e))
+        logging.error(f"Can't access {mount_point} or not enough space {space}" + str(e))
         sys.exit(2)
 
+
+def checkEndpoints():
+    """
+
+    :return:
+    """
+    for service in services:
+        response = requests.post(url=service, json=services[service])
+        if response.status_code != 200:
+            logging.error(f"{service} is not available")
+            sys.exit(2)
+        # else:
+        #     logging.info(response.content.decode("utf-8"))
+        
 
 if __name__ == '__main__':
     checkIfNobody()
@@ -72,3 +105,4 @@ if __name__ == '__main__':
     testWriteable()
     enoughSpace(scratch, 95)
     enoughSpace(var_lib_docker, 95)
+    checkEndpoints()
