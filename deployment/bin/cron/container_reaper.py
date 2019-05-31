@@ -15,8 +15,8 @@ slack_key = os.environ.get("SLACK_WEBHOOK_KEY", None)
 # ee_notifications_channel
 webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
 
-kill = os.environ.get("DELETE_ABANDONDED_CONTAINERS", False)
-if kill == "True":
+kill = os.environ.get("DELETE_ABANDONDED_CONTAINERS", "false")
+if kill.lower() == "true" :
     kill = True
 else:
     kill = False
