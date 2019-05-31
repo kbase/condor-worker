@@ -58,7 +58,7 @@ def exit(message):
 
 def exit_successfully():
     print("NODE_IS_HEALTHY = True")
-    print(f"HEALTH_STATUS_MESSAGE = Healthy {datetime.datetime.now()}")
+    print(f"HEALTH_STATUS_MESSAGE = 'Healthy {datetime.datetime.now()}'")
     print("- update:true")
     sys.exit(0)
 
