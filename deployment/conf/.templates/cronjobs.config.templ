@@ -1,0 +1,26 @@
+# SLACK_WEBHOOK_KEY={{ .Env.SLACK_WEBHOOK_KEY }}
+
+# startd hook to check if node is healthy
+STARTD_CRON_NodeHealth_EXECUTABLE = /kb/deployment/bin/cron/health_check.py
+STARTD_CRON_NodeHealth_PERIOD = 30s
+STARTD_CRON_NodeHealth_MODE = Periodic
+STARTD_CRON_NodeHealth_RECONFIG_RERUN = True
+STARTD_CRON_NodeHealth_ENV = "NJS_ENDPOINT={{ .Env.NJS_ENDPOINT }} SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }} SERVICE_ENDPOINT={{ .Env.SERVICE_ENDPOINT }} CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} DOCKER_CACHE={{ .Env.DOCKER_CACHE }}"
+
+# startd hook to delete exited containers
+STARTD_CRON_DeleteExitedContainers_EXECUTABLE = /kb/deployment/bin/cron/delete_exited_containers.py
+STARTD_CRON_DeleteExitedContainers_PERIOD = 60s
+STARTD_CRON_DeleteExitedContainers_MODE = Periodic
+STARTD_CRON_DeleteExitedContainers_RECONFIG_RERUN = True
+STARTD_CRON_DeleteExitedContainers_ENV = ""
+
+# startd hook to delete abandoned containers
+STARTD_CRON_ReapAbandondedContainers_EXECUTABLE = /kb/deployment/bin/cron/container_reaper.py
+STARTD_CRON_ReapAbandondedContainers_PERIOD = 30s
+STARTD_CRON_ReapAbandondedContainers_MODE = Periodic
+STARTD_CRON_ReapAbandondedContainers_RECONFIG_RERUN = True
+STARTD_CRON_DeleteExitedContainers_ENV = "NJS_ENDPOINT={{ .Env.NJS_ENDPOINT }} SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }} DELETE_ABANDONDED_CONTAINERS={{ .Env.DELETE_ABANDONDED_CONTAINERS }}"
+
+
+STARTD_CRON_JOBLIST = NodeHealth DeleteExitedContainers ReapAbandondedContainers
+# STARTD_CRON_AUTOPUBLISH = If_Changed
