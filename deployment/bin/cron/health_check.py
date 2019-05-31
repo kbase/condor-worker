@@ -1,17 +1,16 @@
 #!/opt/rh/rh-python36/root/usr/bin/python
+import datetime
+import json
+import logging
 import os
+import pwd
+import socket
+import stat
 import subprocess
 import sys
-import docker
-import pwd
-import logging
-import requests
-import json
-import socket
-import pwd
-import stat
-import datetime
 
+import docker
+import requests
 
 
 def send_slack_message(message):
@@ -52,7 +51,8 @@ def exit(message):
     print(f"HEALTH_STATUS_MESSAGE = '{message}'")
     print("- update:true")
     now = datetime.datetime.now()
-    send_slack_message(f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message)
+    send_slack_message(
+        f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message)
     sys.exit(1)
 
 
@@ -97,11 +97,10 @@ def testDockerSocket():
     Check to see if the nobody user has access to the docker socket
     """
     socket = "/var/run/docker.sock"
-    if os.stat(socket).st_gid == gid:
-        return
+    socket_gid = os.stat(socket).st_gid
 
-    #TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    if os.stat(socket).st_gid == 999:
+    # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
+    if socket_gid == gid or socket_gid == 999 or socket_gid == 996:
         return
 
     message = f"Cannot access docker socket"
