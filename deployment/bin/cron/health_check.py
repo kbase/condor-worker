@@ -34,7 +34,7 @@ scratch = os.path.dirname(
 endpoint = os.environ.get("SERVICE_ENDPOINT", None)
 
 if endpoint is None:
-    raise Exception("SERVICE_ENDPOINT is not defined")
+    exit("SERVICE_ENDPOINT is not defined")
 
 # Docker Cache
 var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
@@ -155,7 +155,7 @@ def checkEndpoints():
                 }
 
     for service in services:
-        response = requests.post(url=service, json=services[service])
+        response = requests.post(url=service, json=services[service], timeout=30)
         if response.status_code != 200:
             message = f"{service} is not available"
             logging.error(message)
