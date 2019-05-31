@@ -50,7 +50,7 @@ def exit(message):
     print(f"HEALTH_STATUS_MESSAGE = '{message}'")
     print("- update:true")
     now = datetime.datetime.now()
-    send_slack_message(f"Ran healthcheck at {now} on {socket.gethostname()} with failure" + message)
+    send_slack_message(f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message)
     sys.exit(1)
 
 
