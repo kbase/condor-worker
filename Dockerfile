@@ -2,13 +2,13 @@ FROM centos:7
 ENV container docker
 
 # Get commonly used utilities
-RUN yum -y update && yum -y install -y wget which git deltarpm 
+RUN yum -y update && yum update -y systemd && yum -y install -y wget which git deltarpm gcc libcgroup libcgroup-tools
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
 
 # Get Java
-RUN yum install -y java-11-openjdk java-11-openjdk-devel 
+RUN yum install -y java-11-openjdk java-11-openjdk-devel openjdk-11-jdk-headless
 
 #Install Python3 and Libraries
 RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36
@@ -48,7 +48,7 @@ RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-RUN /kb/deployment/bin/install_python_dependencies.sh
+RUN  /kb/deployment/bin/install_python_dependencies.sh
 
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 

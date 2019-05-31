@@ -1,6 +1,13 @@
 ##  What machine is your central manager?
 CONDOR_HOST = {{ default .Env.CONDOR_HOST "condor" }}
 SCHEDD_HOST = {{ default .Env.SCHEDD_HOST "kbase@condor" }}
+CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}
+PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}
+
+## Allow commands to execute from this machine
+ALLOW_WRITE = $(ALLOW_WRITE) *.$(UID_DOMAIN) $(HOSTNAME)
+ALLOW_ADMINISTRATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
+ALLOW_NEGOTIATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
 
 # Set COLLECTOR_HOST if collector's internal hostname doesn't match DNS name
 # and also set sock=COLLECTOR if using shared port
@@ -24,14 +31,18 @@ COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
 SEC_DEFAULT_AUTHENTICATION = {{ default .Env.SEC_DEFAULT_AUTHENTICATION "PASSWORD" }}
 SEC_DEFAULT_AUTHENTICATION_METHODS = {{ default .Env.SEC_AUTHENTICATION_METHODS "PASSWORD" }} 
 SEC_DEFAULT_NEGOTIATION = {{ default .Env.SEC_DEFAULT_NEGOTIATION "REQUIRED" }} 
-
 SEC_PASSWORD_FILE = {{ default .Env.SEC_PASSWORD_FILE "/etc/condor/password" }}
 
 UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}
 DAEMON_LIST = MASTER, STARTD
 DISCARD_SESSION_KEYRING_ON_STARTUP = False
 
-START = True
+StartJobs = True
+
+NODE_IS_HEALTHY = False
+# When is this node willing to run jobs?
+START = (NODE_IS_HEALTHY =?= True) && (StartJobs =?= True) 
+
 SUSPEND = False
 PREEMPT = False
 KILL = False
@@ -45,14 +56,9 @@ NUM_SLOTS_TYPE_1 = 1
 SLOT_TYPE_1 = 100%
 SLOT_TYPE_1_PARTITIONABLE = TRUE
 CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }}
-
  
 CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
 EXECUTE = {{ default .Env.condor_submit_workdir "/mnt/awe/condor" }}/condor_job_execute/$(HOSTNAME)/
 STARTD_RECOMPUTE_DISK_FREE = true 
-
-STARTD_ATTRS = CLIENTGROUP
-
-CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}
-PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}
+STARTD_ATTRS = StartJobs, CLIENTGROUP, $(STARTD_ATTRS)
