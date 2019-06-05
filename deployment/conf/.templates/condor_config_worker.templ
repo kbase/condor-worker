@@ -37,12 +37,15 @@ UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}
 DAEMON_LIST = MASTER, STARTD
 DISCARD_SESSION_KEYRING_ON_STARTUP = False
 
-StartJobs = True
 
-NODE_IS_HEALTHY = False
+
+
 # When is this node willing to run jobs?
-START = (NODE_IS_HEALTHY =?= True) && (StartJobs =?= True) 
+#StartJobs = True
+#NODE_IS_HEALTHY = False
+#START = (NODE_IS_HEALTHY =?= True) && (StartJobs =?= True) 
 
+START = TRUE
 SUSPEND = False
 PREEMPT = False
 KILL = False
@@ -61,4 +64,5 @@ CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
 EXECUTE = {{ default .Env.condor_submit_workdir "/mnt/awe/condor" }}/condor_job_execute/$(HOSTNAME)/
 STARTD_RECOMPUTE_DISK_FREE = true 
-STARTD_ATTRS = StartJobs, CLIENTGROUP, $(STARTD_ATTRS)
+#STARTD_ATTRS = StartJobs, CLIENTGROUP, $(STARTD_ATTRS)
+STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)
