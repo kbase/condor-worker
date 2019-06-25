@@ -13,22 +13,24 @@ import docker
 import requests
 
 
-def send_slack_message(message):
+def send_slack_message(message: str):
     """
     :param message: Escaped Message to send to slack
     """
     # ee_notifications_channel
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
-    slack_data = {'text': message}
+    slack_data = {"text": message}
     requests.post(
-        webhook_url, data=json.dumps(slack_data),
-        headers={'Content-Type': 'application/json'}
+        webhook_url,
+        data=json.dumps(slack_data),
+        headers={"Content-Type": "application/json"},
     )
 
 
 # Up one level for scratch
 scratch = os.path.dirname(
-    os.environ.get("CONDOR_SUBMIT_WORKDIR", "/mnt/awe/condor/condor_job_execute"))
+    os.environ.get("CONDOR_SUBMIT_WORKDIR", "/mnt/awe/condor/condor_job_execute")
+)
 # Endpoint
 
 endpoint = os.environ.get("SERVICE_ENDPOINT", None)
@@ -46,13 +48,15 @@ gid = pwd.getpwnam(user).pw_gid
 
 # TODO Report to nagios
 
-def exit(message):
+
+def exit(message: str):
     print("NODE_IS_HEALTHY = False")
     print(f'HEALTH_STATUS_MESSAGE = "{message}"')
     print("- update:true")
     now = datetime.datetime.now()
     send_slack_message(
-        f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message)
+        f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message
+    )
     sys.exit(1)
 
 
@@ -63,7 +67,7 @@ def exit_successfully():
     sys.exit(0)
 
 
-def checkIfNobody():
+def check_if_nobody():
     name = pwd.getpwuid(os.getuid()).pw_name
     if name != "nobody":
         message = f"{name} is not nobody user"
@@ -92,7 +96,7 @@ def testWriteableOld():
         exit(message)
 
 
-def testDockerSocket():
+def test_docker_socket():
     """
     Check to see if the nobody user has access to the docker socket
     """
@@ -108,22 +112,24 @@ def testDockerSocket():
     exit(message)
 
 
-def testWorldWriteable():
+def test_world_writeable():
     """
     Check to see if /mnt/awe/condor is writeable
     """
     # Strip out octal 0o
     perms = str(oct(stat.S_IMODE(os.stat(scratch).st_mode))).lstrip("0").lstrip("o")
 
-    if perms == '01777' or perms == '1777' or perms == "0o1777":
+    if perms == "01777" or perms == "1777" or perms == "0o1777":
         return
     else:
-        message = f"Cannot access {scratch} gid={ os.stat(scratch).st_gid } perms={perms}"
+        message = (
+            f"Cannot access {scratch} gid={ os.stat(scratch).st_gid } perms={perms}"
+        )
         logging.error(message)
         exit(message)
 
 
-def enoughSpace(mount_point, nickname, percentage):
+def test_enough_space(mount_point, nickname, percentage):
     """
     Check to see if point has enough space (how to do this without DF?)
     """
@@ -151,15 +157,27 @@ def checkEndpoints():
     Check auth/njs/catalog/ws
     """
 
-    services = {f"{endpoint}/auth": {},
-                f"{endpoint}/njs_wrapper": {"method": "NarrativeJobService.status",
-                                            "version": "1.1",
-                                            "id": 1, "params": []},
-                f"{endpoint}/catalog": {"method": "Catalog.status", "version": "1.1", "id": 1,
-                                        "params": []},
-                f"{endpoint}/ws": {"method": "Workspace.status", "version": "1.1", "id": 1,
-                                   "params": []},
-                }
+    services = {
+        f"{endpoint}/auth": {},
+        f"{endpoint}/njs_wrapper": {
+            "method": "NarrativeJobService.status",
+            "version": "1.1",
+            "id": 1,
+            "params": [],
+        },
+        f"{endpoint}/catalog": {
+            "method": "Catalog.status",
+            "version": "1.1",
+            "id": 1,
+            "params": [],
+        },
+        f"{endpoint}/ws": {
+            "method": "Workspace.status",
+            "version": "1.1",
+            "id": 1,
+            "params": [],
+        },
+    }
 
     for service in services:
         response = requests.post(url=service, json=services[service], timeout=30)
@@ -169,12 +187,12 @@ def checkEndpoints():
             exit(message)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     try:
-        testDockerSocket()
-        testWorldWriteable()
-        enoughSpace(scratch, "scratch", 95)
-        enoughSpace(var_lib_docker, "docker", 95)
+        test_docker_socket()
+        test_world_writeable()
+        test_enough_space(scratch, "scratch", 95)
+        test_enough_space(var_lib_docker, "docker", 95)
         checkEndpoints()
     except Exception as e:
         exit(str(e))
