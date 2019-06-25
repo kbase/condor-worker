@@ -48,7 +48,7 @@ gid = pwd.getpwnam(user).pw_gid
 
 def exit(message):
     print("NODE_IS_HEALTHY = False")
-    print(f"HEALTH_STATUS_MESSAGE = '{message}'")
+    print(f'HEALTH_STATUS_MESSAGE = "{message}"')
     print("- update:true")
     now = datetime.datetime.now()
     send_slack_message(
@@ -58,7 +58,7 @@ def exit(message):
 
 def exit_successfully():
     print("NODE_IS_HEALTHY = True")
-    print(f"HEALTH_STATUS_MESSAGE = 'Healthy {datetime.datetime.now()}'")
+    print(f'HEALTH_STATUS_MESSAGE = "Healthy {datetime.datetime.now()}"')
     print("- update:true")
     sys.exit(0)
 
