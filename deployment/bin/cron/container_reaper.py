@@ -33,8 +33,13 @@ dc = docker.from_env()
 
 
 def find_dockerhub_jobs() -> Dict:
-    all_containers = dc.containers
-    list = all_containers.list()
+    #send_slack_message(f"Job CONTAINER_REAPER is FINDING DOCKERHUB JOBS at {datetime.datetime.now()}")
+
+    try:
+        all_containers = dc.containers
+        list = all_containers.list()
+    except Exception as e:
+        send_slack_message(str(e) + hostname)
 
     job_containers = {}
 
@@ -54,6 +59,8 @@ def find_dockerhub_jobs() -> Dict:
 
 
 def find_running_jobs(ps_name: str):
+    #send_slack_message(f"Job CONTAINER_REAPER is FINDING RUNNING JOBS at {datetime.datetime.now()}")
+
     "Return a list of processes matching 'name'."
     ls = []
     for p in psutil.process_iter(attrs=["name", "cmdline"]):
@@ -132,6 +139,7 @@ def kill_docker_container(cnt_id: str):
 
 
 def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
+    #send_slack_message(f"Job CONTAINER_REAPER is KILLING DEAD JOBS at {datetime.datetime.now()}")
     for cnt_id in docker_processes:
         labels = docker_processes[cnt_id]
         job_id = labels.get("job_id", None)
@@ -143,10 +151,13 @@ def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
 
 if __name__ == "__main__":
     try:
+        #send_slack_message(f"Job CONTAINER_REAPER is beginning at {datetime.datetime.now()}")
         name = "us.kbase.narrativejobservice.sdkjobs.SDKLocalMethodRunner"
+
         running_java_jobs = find_running_jobs(name)
         docker_jobs = find_dockerhub_jobs()
         kill_dead_jobs(running_java_jobs, docker_jobs)
+        #send_slack_message(f"Job CONTAINER_REAPER is ENDING at {datetime.datetime.now()}")
     except Exception as e:
-        send_slack_message("FAILURE" + str(e.with_traceback()))
+        send_slack_message(f"FAILURE on {hostname}" + str(e.with_traceback()))
         logging.error(e.with_traceback())

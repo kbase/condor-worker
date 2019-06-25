@@ -189,11 +189,13 @@ def checkEndpoints():
 
 if __name__ == "__main__":
     try:
+        # send_slack_message(f"Job HEALTH_CHECK is beginning at {datetime.datetime.now()}")
         test_docker_socket()
         test_world_writeable()
         test_enough_space(scratch, "scratch", 95)
         test_enough_space(var_lib_docker, "docker", 95)
         checkEndpoints()
+        # send_slack_message(f"Job HEALTH_CHECK is ENDING at {datetime.datetime.now()}")
     except Exception as e:
         exit(str(e))
     exit_successfully()

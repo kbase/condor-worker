@@ -4,6 +4,7 @@ import json
 import requests
 import docker
 import socket
+import datetime
 
 
 def send_slack_message(message: str):
@@ -21,7 +22,7 @@ def send_slack_message(message: str):
 
 
 if __name__ == "__main__":
-
+    # send_slack_message(f"Job DELETE_EXITED is beginning at {datetime.datetime.now()}")
     hostname = socket.gethostname()
     dc = docker.from_env()
     ec = dc.containers.list(filters={"status": "exited"})
@@ -30,3 +31,5 @@ if __name__ == "__main__":
     if count > 0:
         dc.containers.prune()
         send_slack_message(f"Deleted {count} stopped containers on {hostname}")
+
+    # send_slack_message(f"Job DELETE_EXITED is ENDING at {datetime.datetime.now()}")
