@@ -14,11 +14,11 @@ logging.basicConfig(level=logging.DEBUG)
 
 # Improvements: Use a library
 
-while (True):
-    delete = os.environ.get('DELETE_ABANDONED_CONTAINERS')
-    webhook_url = os.environ.get('SLACK_WEBHOOK_URL')
+while True:
+    delete = os.environ.get("DELETE_ABANDONED_CONTAINERS")
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL")
 
-    hostname = subprocess.check_output('hostname').strip()
+    hostname = subprocess.check_output("hostname").strip()
     logging.info("About to check for jobs on" + str(hostname))
 
     try:
@@ -42,11 +42,15 @@ while (True):
 
             # Try catch here so the script can keep going
             try:
-                cmd = "docker inspect --format '{{ index .Config.Labels \"job_id\"}}' " + str(
-                    container_id)
+                cmd = (
+                    "docker inspect --format '{{ index .Config.Labels \"job_id\"}}' "
+                    + str(container_id)
+                )
                 ujs_id = str(subprocess.check_output(cmd, shell=True).strip())
-                cmd = "docker inspect --format '{{ index .Config.Labels \"condor_id\"}}' " + str(
-                    container_id)
+                cmd = (
+                    "docker inspect --format '{{ index .Config.Labels \"condor_id\"}}' "
+                    + str(container_id)
+                )
                 condor_id = str(subprocess.check_output(cmd, shell=True).strip())
 
                 # Skip containers without a condor or worker id
@@ -55,22 +59,21 @@ while (True):
 
                 if ujs_id not in running_job_ids:
                     message = "container:[{}] job_id:[{}] condor_id:[{}] is dead ({}) {} ".format(
-                        container_id,
-                        ujs_id,
-                        condor_id,
-                        hostname,
-                        now)
+                        container_id, ujs_id, condor_id, hostname, now
+                    )
 
-                    slack_data = {'text': message}
+                    slack_data = {"text": message}
 
                     response = requests.post(
-                        webhook_url, data=json.dumps(slack_data),
-                        headers={'Content-Type': 'application/json'}
+                        webhook_url,
+                        data=json.dumps(slack_data),
+                        headers={"Content-Type": "application/json"},
                     )
 
                     if delete == "true":
-                        cmd = 'docker stop {} && docker container rm -v {}'.format(container_id,
-                                                                                   container_id)
+                        cmd = "docker stop {} && docker container rm -v {}".format(
+                            container_id, container_id
+                        )
                         logging.error(message)
                         logging.error(cmd)
                         output = subprocess.check_output(cmd, shell=True)
