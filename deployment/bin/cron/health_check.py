@@ -27,10 +27,8 @@ def send_slack_message(message: str):
     )
 
 
-# Up one level for scratch
-scratch = os.path.dirname(
-    os.environ.get("CONDOR_SUBMIT_WORKDIR", "/mnt/awe/condor/condor_job_execute")
-)
+
+scratch =  os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 # Endpoint
 
 endpoint = os.environ.get("SERVICE_ENDPOINT", None)
@@ -86,14 +84,7 @@ def testDockerOld():
         exit(message)
 
 
-def testWriteableOld():
-    """
-    Check to see if /mnt/awe/condor is writeable
-    """
-    if not os.access(scratch, os.W_OK | os.X_OK):
-        message = f"Cannot  access {scratch}"
-        logging.error(message)
-        exit(message)
+
 
 
 def test_docker_socket():
