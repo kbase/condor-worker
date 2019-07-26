@@ -11,8 +11,9 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 RUN yum install -y java-11-openjdk java-11-openjdk-devel openjdk-11-jdk-headless
 
 #Install Python3 and Libraries
-RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36
-
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
+&& bash ~/miniconda.sh -b -p $HOME/miniconda \
+&& export PATH="$HOME/miniconda/bin:$PATH"
 
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
@@ -23,7 +24,6 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
 
 #INSTALL DOCKERIZE
 RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
-
 
 # Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
 RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
@@ -48,7 +48,7 @@ RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-RUN  /kb/deployment/bin/install_python_dependencies.sh
+RUN /kb/deployment/bin/install_python_dependencies.sh
 
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
