@@ -1,4 +1,4 @@
-#!/opt/rh/rh-python36/root/usr/bin/python
+#!/root/miniconda/bin/python
 import datetime
 import fnmatch
 import json
