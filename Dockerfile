@@ -10,7 +10,7 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 # Get Java
 RUN yum install -y java-11-openjdk java-11-openjdk-devel openjdk-11-jdk-headless
 
-#Install Python3 and Libraries
+#Install Python3 and Libraries (source /root/miniconda/bin/activate)
 RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
 && bash ~/miniconda.sh -b -p $HOME/miniconda \
 && export PATH="$HOME/miniconda/bin:$PATH"
