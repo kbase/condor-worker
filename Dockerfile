@@ -48,11 +48,13 @@ ARG BRANCH=develop
 RUN rm -rf /var/cache/yum
 
 ENV PATH /root/miniconda/bin:$PATH
-RUN \
-    git clone https://github.com/scanon/JobRunner && \
-    cd JobRunner && git checkout setup && \
-    pip install -r requirements.txt && \
-    python ./setup.py install
+# RUN \
+#     git clone https://github.com/scanon/JobRunner && \
+#     cd JobRunner && git checkout setup && \
+#     pip install -r requirements.txt && \
+#     python ./setup.py install && cd .. && rm -rf JobRunner
+
+RUN wget https://github.com/kbase/JobRunner/blob/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
