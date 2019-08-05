@@ -47,6 +47,13 @@ ARG BRANCH=develop
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
+ENV PATH /root/miniconda/bin:$PATH
+RUN \
+    git clone https://github.com/scanon/JobRunner && \
+    cd JobRunner && git checkout setup && \
+    pip install -r requirements.txt && \
+    python ./setup.py install
+
 COPY --chown=kbase deployment/ /kb/deployment/
 
 RUN /kb/deployment/bin/install_python_dependencies.sh
