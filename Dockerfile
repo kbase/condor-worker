@@ -47,7 +47,7 @@ ARG BRANCH=develop
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
-ENV PATH /root/miniconda/bin:$PATH
+ENV PATH /miniconda/bin:$PATH
 # RUN \
 #     git clone https://github.com/scanon/JobRunner && \
 #     cd JobRunner && git checkout setup && \
