@@ -13,8 +13,8 @@ RUN yum install -y java-11-openjdk java-11-openjdk-devel openjdk-11-jdk-headless
 #Install Python3 and Libraries (source /root/miniconda/bin/activate)
 RUN yum install -y bzip2 \
 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
-&& bash ~/miniconda.sh -b -p $HOME/miniconda \
-&& export PATH="$HOME/miniconda/bin:$PATH"
+&& bash ~/miniconda.sh -b -p /miniconda \
+&& export PATH="/miniconda/bin:$PATH"
 
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
