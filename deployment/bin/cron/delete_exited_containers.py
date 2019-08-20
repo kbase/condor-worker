@@ -1,4 +1,4 @@
-#!/root/miniconda/bin/python
+#!/miniconda/bin/python
 import os
 import json
 import requests
