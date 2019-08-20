@@ -1,4 +1,4 @@
-#!/root/miniconda/bin/python
+#!/miniconda/bin/python
 import datetime
 import fnmatch
 import json
