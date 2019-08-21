@@ -66,6 +66,7 @@ CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
 
 EXECUTE = {{ default .Env.condor_submit_workdir "/cdr/" }}$(EXECUTE_SUFFIX)
+EXECUTE2 = {{ default .Env.condor_submit_workdir "/cdr/" }}$(EXECUTE_SUFFIX)
 STARTD_RECOMPUTE_DISK_FREE = true 
 #STARTD_ATTRS = StartJobs, CLIENTGROUP, $(STARTD_ATTRS)
 STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)
