@@ -29,6 +29,8 @@ def send_slack_message(message: str):
 
 
 scratch =  os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
+scratch += os.environ.get("EXECUTE_SUFFIX","")
+
 # Endpoint
 
 endpoint = os.environ.get("SERVICE_ENDPOINT", None)
