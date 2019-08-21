@@ -65,8 +65,8 @@ CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 #LEGACY : /mnt/awe/condor/condor_job_execute/$(HOSTNAME)/ to
 
 
-EXECUTE = {{ default .Env.condor_submit_workdir "/cdr/" }}$(EXECUTE_SUFFIX)
-EXECUTE2 = {{ default .Env.condor_submit_workdir "/cdr/" }}$(EXECUTE_SUFFIX)
+EXECUTE = {{ default .Env.condor_submit_workdir "/cdr/" }}{{ .Env.EXECUTE_SUFFIX }}
+EXECUTE2 = {{ default .Env.condor_submit_workdir "/cdr/" }}{{ .Env.EXECUTE_SUFFIX }}
 STARTD_RECOMPUTE_DISK_FREE = true 
 #STARTD_ATTRS = StartJobs, CLIENTGROUP, $(STARTD_ATTRS)
 STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)
