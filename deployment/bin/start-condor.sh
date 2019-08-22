@@ -18,14 +18,13 @@ if [ "$SET_NOBODY_USER_UID" ] ; then
 fi
 
 if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
-    mkdir -p $CONDOR_SUBMIT_WORKDIR
-    chmod 01777 $CONDOR_SUBMIT_WORKDIR
+    mkdir -p $CONDOR_SUBMIT_WORKDIR${EXECUTE_SUFFIX}
+    chmod 01777 $CONDOR_SUBMIT_WORKDIR${EXECUTE_SUFFIX}
 else
-    mkdir -p /cdr/
-    chmod 01777 /cdr/
+    mkdir -p /cdr${EXECUTE_SUFFIX}
+    chmod 01777 /cdr${EXECUTE_SUFFIX}
 fi
 
-check_script="/kb/deployment/bin/check_abandoned_containers.py"
-chmod +x $check_script
-$check_script  >> check_abandoned_containers.log 2>&1 &
+
+
 exec $(condor_config_val MASTER) -f -t 2>&1
