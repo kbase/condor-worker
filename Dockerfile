@@ -29,12 +29,13 @@ RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-
 # Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
 RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
 
-# Install Condor
+# Install HTCondor
+RUN yum install -y boost-devel
 RUN cd /etc/yum.repos.d && \
 wget http://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-development-rhel7.repo && \
 wget http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
-rpm --import RPM-GPG-KEY-HTCondor && \
-yum -y install condor-all
+rpm --import RPM-GPG-KEY-HTCondor
+RUN yum -y install condor
 
 #ADD DIRS
 RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
