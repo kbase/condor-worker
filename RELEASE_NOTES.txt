@@ -1,0 +1,7 @@
+1.0.0
+======
+* Upgraded from redhat python to miniconda 3.7 (or later) and add to PATH
+* Fix broken redhat install `condor-all` to `condor`
+* Update paths for cronjob scripts
+* Add execute suffix
+* Deactivate DELETE_EXITED_CONTAINERS script for diagnosis for lost containers on DTN
