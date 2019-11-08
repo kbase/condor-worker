@@ -97,10 +97,11 @@ def test_docker_socket():
     socket_gid = os.stat(socket).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    if socket_gid == gid or socket_gid == 999 or socket_gid == 996:
+    gids = [999,996,995]
+    if socket_gid in gids:
         return
-
-    message = f"Cannot access docker socket"
+    
+    message = f"Cannot access docker socket, check to make sure permissions of user in {gids}"
     logging.error(message)
     exit(message)
 
