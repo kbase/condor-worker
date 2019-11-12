@@ -2,6 +2,7 @@
 
 # If there is an environment variable "POOL_PASSWORD" write it out to the pool
 # condor pool password
+
 if [ "$GROUPMOD_DOCKER" ] ; then
     groupmod -g $GROUPMOD_DOCKER docker
 fi
