@@ -2,6 +2,12 @@
 
 # If there is an environment variable "POOL_PASSWORD" write it out to the pool
 # condor pool password
+
+if [ "$GROUPMOD_DOCKER" ] ; then
+    groupmod -g $GROUPMOD_DOCKER docker
+fi
+
+
 if [ "$POOL_PASSWORD" ] ; then
     /usr/sbin/condor_store_cred -p "$POOL_PASSWORD" -f `condor_config_val SEC_PASSWORD_FILE`
 fi
