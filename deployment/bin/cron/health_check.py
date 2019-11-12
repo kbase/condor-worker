@@ -97,7 +97,7 @@ def test_docker_socket():
     socket_gid = os.stat(socket).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    gids = [999,996,995]
+    gids = [999,996,995,987]
     if socket_gid in gids:
         return
     
