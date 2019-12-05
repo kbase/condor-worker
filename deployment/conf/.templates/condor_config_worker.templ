@@ -41,11 +41,13 @@ DISCARD_SESSION_KEYRING_ON_STARTUP = False
 
 
 # When is this node willing to run jobs?
-#StartJobs = True
-#NODE_IS_HEALTHY = False
-#START = (NODE_IS_HEALTHY =?= True) && (StartJobs =?= True) 
+StartJobs = True
+NODE_IS_HEALTHY = False
+START = (NODE_IS_HEALTHY =?= True) && (StartJobs =?= True)
+# Check this with condor_config_val START -evaluate
 
-START = TRUE
+
+#START = TRUE
 SUSPEND = False
 PREEMPT = False
 KILL = False
