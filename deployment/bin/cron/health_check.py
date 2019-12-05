@@ -1,4 +1,8 @@
 #!/miniconda/bin/python
+"""
+This script is to be run by the condor cronjob periodically in order to test if the node is able to accept jobs or not.
+
+"""
 import datetime
 import json
 import logging
@@ -10,6 +14,7 @@ import subprocess
 import sys
 
 import docker
+import psutil
 import requests
 
 
@@ -27,9 +32,9 @@ def send_slack_message(message: str):
     )
 
 
-
-scratch =  os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
-scratch += os.environ.get("EXECUTE_SUFFIX","")
+debug = False
+scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
+scratch += os.environ.get("EXECUTE_SUFFIX", "")
 
 # Endpoint
 
@@ -49,14 +54,18 @@ gid = pwd.getpwnam(user).pw_gid
 # TODO Report to nagios
 
 
-def exit(message: str):
+def exit_unsuccessfully(message: str):
+    if debug is True:
+        logging.error(message)
+
     print("NODE_IS_HEALTHY = False")
     print(f'HEALTH_STATUS_MESSAGE = "{message}"')
     print("- update:true")
     now = datetime.datetime.now()
     send_slack_message(
-        f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message
+        f"POSSIBLE BLACK HOLE: Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message
     )
+
     sys.exit(1)
 
 
@@ -71,22 +80,19 @@ def check_if_nobody():
     name = pwd.getpwuid(os.getuid()).pw_name
     if name != "nobody":
         message = f"{name} is not nobody user"
-        logging.error(message)
-        exit(message)
+        exit_unsuccessfully(message)
 
 
-def testDockerOld():
+def test_free_memory():
     """
-    Check to see if the nobody user has access to the docker socket
+    Check to see if too much memory is being user. Maybe it's a runaway container?
+    :return:
     """
-    dc = docker.from_env()
-    if len(dc.containers.list()) < 1:
-        message = f"Cannot access docker socket"
-        logging.error(message)
-        exit(message)
 
-
-
+    mem = psutil.virtual_memory()
+    if mem.percent > 95:
+        message = f"Memory usage is too high {mem}"
+        exit_unsuccessfully(message)
 
 
 def test_docker_socket():
@@ -97,13 +103,22 @@ def test_docker_socket():
     socket_gid = os.stat(socket).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    gids = [999,996,995,987]
+    gids = [999, 996, 995, 987]
     if socket_gid in gids:
         return
-    
+
     message = f"Cannot access docker socket, check to make sure permissions of user in {gids}"
-    logging.error(message)
-    exit(message)
+    exit_unsuccessfully(message)
+
+
+def test_docker_socket2():
+    """
+    Check to see if the nobody user has access to the docker socket
+    """
+    dc = docker.from_env()
+    if len(dc.containers.list()) < 1:
+        message = f"Cannot access docker socket"
+        exit_unsuccessfully(message)
 
 
 def test_world_writeable():
@@ -117,10 +132,9 @@ def test_world_writeable():
         return
     else:
         message = (
-            f"Cannot access {scratch} gid={ os.stat(scratch).st_gid } perms={perms}"
+            f"Cannot access {scratch} gid={os.stat(scratch).st_gid} perms={perms}"
         )
-        logging.error(message)
-        exit(message)
+        exit_unsuccessfully(message)
 
 
 def test_enough_space(mount_point, nickname, percentage):
@@ -138,12 +152,10 @@ def test_enough_space(mount_point, nickname, percentage):
             return
         else:
             message = f"Can't access {mount_point} or not enough space ({usage} > {percentage})"
-            logging.error(message)
-            exit(message)
+            exit_unsuccessfully(message)
     except Exception as e:
         message = f"Can't access {mount_point} or not enough space {usage}" + str(e)
-        logging.error(message)
-        exit(message)
+        exit_unsuccessfully(message)
 
 
 def checkEndpoints():
@@ -177,19 +189,24 @@ def checkEndpoints():
         response = requests.post(url=service, json=services[service], timeout=30)
         if response.status_code != 200:
             message = f"{service} is not available"
-            logging.error(message)
-            exit(message)
+            exit_unsuccessfully(message)
 
 
-if __name__ == "__main__":
+def main():
     try:
         # send_slack_message(f"Job HEALTH_CHECK is beginning at {datetime.datetime.now()}")
         test_docker_socket()
+        test_docker_socket2()
         test_world_writeable()
         test_enough_space(scratch, "scratch", 95)
         test_enough_space(var_lib_docker, "docker", 95)
+        test_free_memory()
         checkEndpoints()
         # send_slack_message(f"Job HEALTH_CHECK is ENDING at {datetime.datetime.now()}")
     except Exception as e:
-        exit(str(e))
+        exit_unsuccessfully(str(e))
     exit_successfully()
+
+
+if __name__ == "__main__":
+    main()
