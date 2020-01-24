@@ -54,7 +54,7 @@ gid = pwd.getpwnam(user).pw_gid
 # TODO Report to nagios
 
 
-def exit_unsuccessfully(message: str):
+def exit_unsuccessfully(message: str, send_to_slack=True):
     if debug is True:
         logging.error(message)
 
@@ -62,9 +62,11 @@ def exit_unsuccessfully(message: str):
     print(f'HEALTH_STATUS_MESSAGE = "{message}"')
     print("- update:true")
     now = datetime.datetime.now()
-    send_slack_message(
-        f"POSSIBLE BLACK HOLE: Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message
-    )
+
+    if send_to_slack is True:
+        send_slack_message(
+            f"POSSIBLE BLACK HOLE: Ran healthcheck at {now} on {socket.gethostname()} with failure: {message}"
+        )
 
     sys.exit(1)
 
@@ -83,6 +85,34 @@ def check_if_nobody():
         exit_unsuccessfully(message)
 
 
+def process_is_running(processName):
+    '''
+    Check if there is any running process that contains the given name processName.
+    '''
+    # Iterate over the all the running process
+    for proc in psutil.process_iter():
+        try:
+            # Check if process name contains the given name string.
+            if processName.lower() in proc.name().lower():
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False;
+
+
+def test_condor_starter():
+    """
+    Check to see if more than 10% of memory is in use and no condor starter is running.
+    If this is the case, what is going on!?
+    :return:
+    """
+
+    mem = psutil.virtual_memory()
+    if mem.percent > 10 and process_is_running('condor_starter') is False:
+        message = f"Memory usage is too high {mem.percent}% and there is no condor starter running."
+        exit_unsuccessfully(message, send_to_slack=True)
+
+
 def test_free_memory():
     """
     Check to see if too much memory is being user. Maybe it's a runaway container?
@@ -91,8 +121,11 @@ def test_free_memory():
 
     mem = psutil.virtual_memory()
     if mem.percent > 95:
-        message = f"Memory usage is too high {mem}"
-        exit_unsuccessfully(message)
+        message = f"Memory usage is too high {mem.percent}%. Cannot accept new jobs"
+        exit_unsuccessfully(message, send_to_slack=False)
+
+
+
 
 
 def test_docker_socket():
@@ -151,7 +184,7 @@ def test_enough_space(mount_point, nickname, percentage):
             #     f"The amount of usage  {usage}  for {mount_point} ({nickname}) which is less than  {percentage}")
             return
         else:
-            message = f"Can't access {mount_point} or not enough space ({usage} > {percentage})"
+            message = f"Can't access {mount_point} or not enough space ({usage}% > {percentage}%)"
             exit_unsuccessfully(message)
     except Exception as e:
         message = f"Can't access {mount_point} or not enough space {usage}" + str(e)
@@ -201,6 +234,7 @@ def main():
         test_enough_space(scratch, "scratch", 95)
         test_enough_space(var_lib_docker, "docker", 95)
         test_free_memory()
+        test_condor_starter()
         checkEndpoints()
         # send_slack_message(f"Job HEALTH_CHECK is ENDING at {datetime.datetime.now()}")
     except Exception as e:

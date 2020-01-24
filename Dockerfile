@@ -1,8 +1,14 @@
 FROM centos:7
 ENV container docker
 
+
+# Enable RPHEL
+RUN yum install epel-release
+
 # Get commonly used utilities
-RUN yum -y update && yum update -y systemd && yum -y install -y wget which git deltarpm gcc libcgroup libcgroup-tools
+RUN yum -y update && yum update -y systemd && yum -y install -y wget which git deltarpm gcc libcgroup libcgroup-tools stress-ng
+
+
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
