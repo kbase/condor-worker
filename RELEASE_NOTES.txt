@@ -1,3 +1,11 @@
+1.0.X
+=====
+* Removed StartJobs requirement
+* Enabled Health Check for memory
+* Add new socket in health check, add flag to change docker group
+* Added ee2 container reaper script
+* Activated RHEL repo and added stress-ng
+
 1.0.0
 ======
 * Upgraded from redhat python to miniconda 3.7 (or later) and add to PATH

@@ -2,7 +2,7 @@ FROM centos:7
 ENV container docker
 
 # Get commonly used utilities
-RUN yum -y update && yum update -y systemd && yum -y install -y wget which git deltarpm gcc libcgroup libcgroup-tools
+RUN yum -y update && yum update -y systemd && yum -y install -y epel-release wget which git deltarpm gcc libcgroup libcgroup-tools stress-ng
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
@@ -67,7 +67,7 @@ ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/kbase/condor-worker.git" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.schema-version="1.0.0-rc1" \
+      org.label-schema.schema-version="1.0.0" \
       us.kbase.vcs-branch=$BRANCH \
       maintainer="Steve Chan sychan@lbl.gov"
 
