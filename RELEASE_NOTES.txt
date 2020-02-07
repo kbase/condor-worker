@@ -1,10 +1,14 @@
-1.0.X
+1.0.7.1 and below
 =====
 * Removed StartJobs requirement
 * Enabled Health Check for memory
 * Add new socket in health check, add flag to change docker group
 * Added ee2 container reaper script
 * Activated RHEL repo and added stress-ng
+* Documented optional requirement for  CGROUP_MEMORY_LIMIT_POLICY = soft
+* Documented mandatory requirement for CONDOR_SUBMIT_WORKDIR / EXECUTE_SUFFIX
+* Added mandatory requirement for environmental variable EE2_ENDPOINT 
+* Added optional requirement for environmental variable CHECK_CONDOR_STARTER_HEALTH = True
 
 1.0.0
 ======

@@ -35,6 +35,7 @@ def send_slack_message(message: str):
 debug = False
 scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 scratch += os.environ.get("EXECUTE_SUFFIX", "")
+check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH", True)
 
 # Endpoint
 
@@ -106,11 +107,11 @@ def test_condor_starter():
     If this is the case, what is going on!?
     :return:
     """
-
-    mem = psutil.virtual_memory()
-    if mem.percent > 10 and process_is_running('condor_starter') is False:
-        message = f"Memory usage is too high {mem.percent}% and there is no condor starter running."
-        exit_unsuccessfully(message, send_to_slack=True)
+    if check_condor_starter_health is True:
+        mem = psutil.virtual_memory()
+        if mem.percent > 10 and process_is_running('condor_starter') is False:
+            message = f"Memory usage is too high {mem.percent}% and there is no condor starter running."
+            exit_unsuccessfully(message, send_to_slack=True)
 
 
 def test_free_memory():
