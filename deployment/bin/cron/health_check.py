@@ -35,7 +35,7 @@ def send_slack_message(message: str):
 debug = False
 scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 scratch += os.environ.get("EXECUTE_SUFFIX", "")
-check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH", True)
+check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == 'true'
 
 # Endpoint
 
