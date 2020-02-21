@@ -1,17 +1,17 @@
 #!/miniconda/bin/python
 import datetime
-import fnmatch
 import json
 import logging
 import os
 import socket
+from typing import List, Dict
 
 import docker
+from docker.models.containers import Container
 import psutil
 import requests
-from clients.NarrativeJobServiceClient import NarrativeJobService
 
-from typing import List, Dict
+logging.basicConfig(level=logging.INFO)
 
 slack_key = os.environ.get("SLACK_WEBHOOK_KEY", None)
 # ee_notifications_channel
@@ -23,10 +23,10 @@ if kill.lower() == "true":
 else:
     kill = False
 
-njs_endpoint_url = os.environ.get("NJS_ENDPOINT", None)
+ee2_endpoint_url = os.environ.get("EE2_ENDPOINT", None)
 
-if njs_endpoint_url is None:
-    raise Exception("NJS Endpoint not set")
+if ee2_endpoint_url is None:
+    raise Exception("EE2 Endpoint not set")
 
 hostname = socket.gethostname()
 dc = docker.from_env()
@@ -37,20 +37,24 @@ def find_dockerhub_jobs() -> Dict:
 
     try:
         all_containers = dc.containers
-        list = all_containers.list()
+        container_list = all_containers.list()
     except Exception as e:
         send_slack_message(str(e) + hostname)
+        raise e
 
     job_containers = {}
 
-    for container in list:
+    for container in container_list:
         cnt_id = container.id
         try:
             cnt = all_containers.get(cnt_id)
             labels = cnt.labels
-            if "condor_id" in labels.keys() and "njs_endpoint" in labels.keys():
-                labels["image"] = cnt.image
-                job_containers[cnt_id] = labels
+            label_keys = labels.keys()
+            if "condor_id" in label_keys and "ee2_endpoint" in label_keys and "worker_hostname" in label_keys:
+                if labels.get('worker_hostname') == hostname and labels.get(
+                        'ee2_endpoint') == ee2_endpoint_url:
+                    labels["image"] = cnt.image
+                    job_containers[cnt_id] = labels
         except Exception as e:
             logging.error(f"Container {cnt_id} doesn't exist anymore")
             logging.error(e)
@@ -58,15 +62,14 @@ def find_dockerhub_jobs() -> Dict:
     return job_containers
 
 
-def find_running_jobs(ps_name: str):
+def find_running_jobs():
+    "Return a list of job ids from running job processes. Since python procs have multiple entries, keep only 1 version"
     # send_slack_message(f"Job CONTAINER_REAPER is FINDING RUNNING JOBS at {datetime.datetime.now()}")
-
-    "Return a list of processes matching 'name'."
     ls = []
     for p in psutil.process_iter(attrs=["name", "cmdline"]):
-        if ps_name in p.info["cmdline"]:
-            ls.append(p.info["cmdline"][-2])
-    return ls
+        if '/miniconda/bin/python' in p.info["cmdline"] and './jobrunner.py' in p.info['cmdline']:
+            ls.append(p.info['cmdline'][-2])
+    return list(set(ls))
 
 
 def send_slack_message(message: str):
@@ -98,42 +101,16 @@ def notify_slack(cnt_id: str, labels: dict(), running_job_ids: List):
     send_slack_message(msg)
 
 
-# @deprecated for EVENTLOG
-def notify_user(cnt_id: str, labels: Dict):
-    username = labels.get("user_name", None)
-    job_id = labels.get("job_id", None)
-    # TODO add this to a configuration somewhere or ENV variable
-    job_directory = f"/mnt/awe/condor/{username}/{job_id}"
-
-    print("About to notify")
-    print(labels)
-
-    env_files = []
-    for file in os.listdir(job_directory):
-        if fnmatch.fnmatch(file, "env_*"):
-            env_files.append(file)
-
-    print(env_files)
-    env_filepath = env_files[0]
-    if os.path.isfile(env_filepath):
-        with open(env_filepath, "r") as content_file:
-            content = content_file.readlines()
-
-        token = None
-        for line in content:
-            if "KB_AUTH_TOKEN" in line:
-                token = line.split("=")[1]
-
-        if token:
-            njs = NarrativeJobService(token=token, url=njs_endpoint_url)
-            status = njs.check_job(job_id)
-            print(status)
-
-
 def kill_docker_container(cnt_id: str):
     if kill is True:
-        cnt = dc.containers.get(cnt_id)
-        cnt.kill()
+        cnt = dc.containers.get(cnt_id)  # type: Container
+        try:
+            cnt.kill()
+        except Exception:
+            try:
+                cnt.remove(force=True)
+            except Exception:
+                send_slack_message(f"Couldn't delete {cnt_id} on {hostname}")
     else:
         pass
 
@@ -144,20 +121,19 @@ def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
         labels = docker_processes[cnt_id]
         job_id = labels.get("job_id", None)
         if job_id not in running_jobs:
+            notify_slack(cnt_id, labels, running_jobs)
             if kill is True:
                 kill_docker_container(cnt_id)
-                notify_slack(cnt_id, labels, running_jobs)
+
 
 
 if __name__ == "__main__":
     try:
         # send_slack_message(f"Job CONTAINER_REAPER is beginning at {datetime.datetime.now()}")
-        name = "us.kbase.narrativejobservice.sdkjobs.SDKLocalMethodRunner"
-
-        running_java_jobs = find_running_jobs(name)
+        locally_running_jobrunners = find_running_jobs()
         docker_jobs = find_dockerhub_jobs()
-        kill_dead_jobs(running_java_jobs, docker_jobs)
+        kill_dead_jobs(locally_running_jobrunners, docker_jobs)
         # send_slack_message(f"Job CONTAINER_REAPER is ENDING at {datetime.datetime.now()}")
     except Exception as e:
-        send_slack_message(f"FAILURE on {hostname}" + str(e.with_traceback()))
-        logging.error(e.with_traceback())
+        send_slack_message(f"FAILURE on {hostname}" + str(e))
+        logging.error(str(e))

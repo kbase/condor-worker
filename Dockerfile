@@ -2,7 +2,7 @@ FROM centos:7
 ENV container docker
 
 # Get commonly used utilities
-RUN yum -y update && yum update -y systemd && yum -y install -y wget which git deltarpm gcc libcgroup libcgroup-tools
+RUN yum -y update && yum update -y systemd && yum -y install -y epel-release wget which git deltarpm gcc libcgroup libcgroup-tools stress-ng
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
@@ -10,9 +10,11 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 # Get Java
 RUN yum install -y java-11-openjdk java-11-openjdk-devel openjdk-11-jdk-headless
 
-#Install Python3 and Libraries
-RUN yum install -y centos-release-scl && yum -y update && yum install -y rh-python36
-
+#Install Python3 and Libraries (source /root/miniconda/bin/activate)
+RUN yum install -y bzip2 \
+&& wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
+&& bash ~/miniconda.sh -b -p /miniconda \
+&& export PATH="/miniconda/bin:$PATH"
 
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
@@ -24,16 +26,14 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
 #INSTALL DOCKERIZE
 RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
 
-
 # Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
 RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
 
-# Install Condor
+# Install HTCondor
 RUN cd /etc/yum.repos.d && \
 wget http://research.cs.wisc.edu/htcondor/yum/repo.d/htcondor-development-rhel7.repo && \
 wget http://research.cs.wisc.edu/htcondor/yum/RPM-GPG-KEY-HTCondor && \
-rpm --import RPM-GPG-KEY-HTCondor && \
-yum -y install condor-all
+rpm --import RPM-GPG-KEY-HTCondor && yum -y install condor
 
 #ADD DIRS
 RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
@@ -46,9 +46,19 @@ ARG BRANCH=develop
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
+ENV PATH /miniconda/bin:$PATH
+# RUN \
+#     git clone https://github.com/scanon/JobRunner && \
+#     cd JobRunner && git checkout setup && \
+#     pip install -r requirements.txt && \
+#     python ./setup.py install && cd .. && rm -rf JobRunner
+
+RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
+#auth_service_url=https://appdev.kbase.us/services/auth/api/legacy/KBase/Sessions/Login
+
 COPY --chown=kbase deployment/ /kb/deployment/
 
-RUN  /kb/deployment/bin/install_python_dependencies.sh
+RUN /kb/deployment/bin/install_python_dependencies.sh
 
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 
@@ -57,7 +67,7 @@ ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 LABEL org.label-schema.build-date=$BUILD_DATE \
       org.label-schema.vcs-url="https://github.com/kbase/condor-worker.git" \
       org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.schema-version="1.0.0-rc1" \
+      org.label-schema.schema-version="1.0.0" \
       us.kbase.vcs-branch=$BRANCH \
       maintainer="Steve Chan sychan@lbl.gov"
 

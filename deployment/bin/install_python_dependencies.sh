@@ -2,5 +2,5 @@
 
 #Install Python3 Libraries
 #TODO Requirements.txt
-source /opt/rh/rh-python36/enable
+source /miniconda/bin/activate
 pip install requests docker slackclient htcondor psutil

@@ -1,4 +1,8 @@
-#!/opt/rh/rh-python36/root/usr/bin/python
+#!/miniconda/bin/python
+"""
+This script is to be run by the condor cronjob periodically in order to test if the node is able to accept jobs or not.
+
+"""
 import datetime
 import json
 import logging
@@ -10,6 +14,7 @@ import subprocess
 import sys
 
 import docker
+import psutil
 import requests
 
 
@@ -27,8 +32,11 @@ def send_slack_message(message: str):
     )
 
 
+debug = False
+scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
+scratch += os.environ.get("EXECUTE_SUFFIX", "")
+check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == 'true'
 
-scratch =  os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 # Endpoint
 
 endpoint = os.environ.get("SERVICE_ENDPOINT", None)
@@ -47,14 +55,20 @@ gid = pwd.getpwnam(user).pw_gid
 # TODO Report to nagios
 
 
-def exit(message: str):
+def exit_unsuccessfully(message: str, send_to_slack=True):
+    if debug is True:
+        logging.error(message)
+
     print("NODE_IS_HEALTHY = False")
     print(f'HEALTH_STATUS_MESSAGE = "{message}"')
     print("- update:true")
     now = datetime.datetime.now()
-    send_slack_message(
-        f"Ran healthcheck at {now} on {socket.gethostname()} with failure: " + message
-    )
+
+    if send_to_slack is True:
+        send_slack_message(
+            f"POSSIBLE BLACK HOLE: Ran healthcheck at {now} on {socket.gethostname()} with failure: {message}"
+        )
+
     sys.exit(1)
 
 
@@ -69,19 +83,47 @@ def check_if_nobody():
     name = pwd.getpwuid(os.getuid()).pw_name
     if name != "nobody":
         message = f"{name} is not nobody user"
-        logging.error(message)
-        exit(message)
+        exit_unsuccessfully(message)
 
 
-def testDockerOld():
+def process_is_running(processName):
+    '''
+    Check if there is any running process that contains the given name processName.
+    '''
+    # Iterate over the all the running process
+    for proc in psutil.process_iter():
+        try:
+            # Check if process name contains the given name string.
+            if processName.lower() in proc.name().lower():
+                return True
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
+            pass
+    return False;
+
+
+def test_condor_starter():
     """
-    Check to see if the nobody user has access to the docker socket
+    Check to see if more than 10% of memory is in use and no condor starter is running.
+    If this is the case, what is going on!?
+    :return:
     """
-    dc = docker.from_env()
-    if len(dc.containers.list()) < 1:
-        message = f"Cannot access docker socket"
-        logging.error(message)
-        exit(message)
+    if check_condor_starter_health is True:
+        mem = psutil.virtual_memory()
+        if mem.percent > 10 and process_is_running('condor_starter') is False:
+            message = f"Memory usage is too high {mem.percent}% and there is no condor starter running."
+            exit_unsuccessfully(message, send_to_slack=True)
+
+
+def test_free_memory():
+    """
+    Check to see if too much memory is being user. Maybe it's a runaway container?
+    :return:
+    """
+
+    mem = psutil.virtual_memory()
+    if mem.percent > 95:
+        message = f"Memory usage is too high {mem.percent}%. Cannot accept new jobs"
+        exit_unsuccessfully(message, send_to_slack=False)
 
 
 
@@ -95,12 +137,22 @@ def test_docker_socket():
     socket_gid = os.stat(socket).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    if socket_gid == gid or socket_gid == 999 or socket_gid == 996:
+    gids = [999, 996, 995, 987]
+    if socket_gid in gids:
         return
 
-    message = f"Cannot access docker socket"
-    logging.error(message)
-    exit(message)
+    message = f"Cannot access docker socket, check to make sure permissions of user in {gids}"
+    exit_unsuccessfully(message)
+
+
+def test_docker_socket2():
+    """
+    Check to see if the nobody user has access to the docker socket
+    """
+    dc = docker.from_env()
+    if len(dc.containers.list()) < 1:
+        message = f"Cannot access docker socket"
+        exit_unsuccessfully(message)
 
 
 def test_world_writeable():
@@ -114,10 +166,9 @@ def test_world_writeable():
         return
     else:
         message = (
-            f"Cannot access {scratch} gid={ os.stat(scratch).st_gid } perms={perms}"
+            f"Cannot access {scratch} gid={os.stat(scratch).st_gid} perms={perms}"
         )
-        logging.error(message)
-        exit(message)
+        exit_unsuccessfully(message)
 
 
 def test_enough_space(mount_point, nickname, percentage):
@@ -134,13 +185,11 @@ def test_enough_space(mount_point, nickname, percentage):
             #     f"The amount of usage  {usage}  for {mount_point} ({nickname}) which is less than  {percentage}")
             return
         else:
-            message = f"Can't access {mount_point} or not enough space ({usage} > {percentage})"
-            logging.error(message)
-            exit(message)
+            message = f"Can't access {mount_point} or not enough space ({usage}% > {percentage}%)"
+            exit_unsuccessfully(message)
     except Exception as e:
         message = f"Can't access {mount_point} or not enough space {usage}" + str(e)
-        logging.error(message)
-        exit(message)
+        exit_unsuccessfully(message)
 
 
 def checkEndpoints():
@@ -174,19 +223,25 @@ def checkEndpoints():
         response = requests.post(url=service, json=services[service], timeout=30)
         if response.status_code != 200:
             message = f"{service} is not available"
-            logging.error(message)
-            exit(message)
+            exit_unsuccessfully(message)
 
 
-if __name__ == "__main__":
+def main():
     try:
         # send_slack_message(f"Job HEALTH_CHECK is beginning at {datetime.datetime.now()}")
         test_docker_socket()
+        test_docker_socket2()
         test_world_writeable()
         test_enough_space(scratch, "scratch", 95)
         test_enough_space(var_lib_docker, "docker", 95)
+        test_free_memory()
+        test_condor_starter()
         checkEndpoints()
         # send_slack_message(f"Job HEALTH_CHECK is ENDING at {datetime.datetime.now()}")
     except Exception as e:
-        exit(str(e))
+        exit_unsuccessfully(str(e))
     exit_successfully()
+
+
+if __name__ == "__main__":
+    main()

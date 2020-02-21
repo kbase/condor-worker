@@ -1,4 +1,4 @@
-#!/opt/rh/rh-python36/root/usr/bin/python
+#!/miniconda/bin/python
 import os
 import json
 import requests

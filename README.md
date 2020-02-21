@@ -9,3 +9,22 @@ The condor workers require
 * REFDATA Permissions set correctly
 * Docker needs privileges to set cgroups/namespaces
 * CLIENTGROUPS set with extra apostrophes
+
+Environmental variables to be set in rancher
+* COLLECTOR_HOST
+* CONDOR_HOST
+* POOL_PASSWORD
+* SCHEDD_HOST
+* UID_DOMAIN
+* USE_TCP
+* SET_NOBODY_USER_GUID
+* SET_NOBODY_USER_UID
+* CONDOR_SUBMIT_WORKDIR
+* EXECUTE_SUFFIX
+* SLACK_WEBHOOK_URL
+* DELETE_ABANDONED_CONTAINERS
+* NJS_ENDPOINT
+* EE2_ENDPOINT
+* SERVICE_ENDPOINT
+* DOCKER_CACHE
+* CGROUP_MEMORY_LIMIT_POLICY
