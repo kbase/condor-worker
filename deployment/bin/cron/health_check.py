@@ -35,7 +35,8 @@ def send_slack_message(message: str):
 debug = False
 scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 scratch += os.environ.get("EXECUTE_SUFFIX", "")
-check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == 'true'
+check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH",
+                                             "true").lower() == 'true'
 
 # Endpoint
 
@@ -86,6 +87,10 @@ def check_if_nobody():
         exit_unsuccessfully(message)
 
 
+def check_for_condor_starter():
+    return process_is_running('condor_starter')
+
+
 def process_is_running(processName):
     '''
     Check if there is any running process that contains the given name processName.
@@ -109,7 +114,7 @@ def test_condor_starter():
     """
     if check_condor_starter_health is True:
         mem = psutil.virtual_memory()
-        if mem.percent > 10 and process_is_running('condor_starter') is False:
+        if mem.percent > 15 and check_for_condor_starter() is False:
             message = f"Memory usage is too high {mem.percent}% and there is no condor starter running."
             exit_unsuccessfully(message, send_to_slack=True)
 
@@ -124,9 +129,6 @@ def test_free_memory():
     if mem.percent > 95:
         message = f"Memory usage is too high {mem.percent}%. Cannot accept new jobs"
         exit_unsuccessfully(message, send_to_slack=False)
-
-
-
 
 
 def test_docker_socket():
@@ -185,10 +187,10 @@ def test_enough_space(mount_point, nickname, percentage):
             #     f"The amount of usage  {usage}  for {mount_point} ({nickname}) which is less than  {percentage}")
             return
         else:
-            message = f"Can't access {mount_point} or not enough space ({usage}% > {percentage}%)"
+            message = f"Can't access {mount_point} ({nickname}) or not enough space ({usage}% > {percentage}%)"
             exit_unsuccessfully(message)
     except Exception as e:
-        message = f"Can't access {mount_point} or not enough space {usage}" + str(e)
+        message = f"Can't access {mount_point} ({nickname}) or not enough space {usage}" + str(e)
         exit_unsuccessfully(message)
 
 

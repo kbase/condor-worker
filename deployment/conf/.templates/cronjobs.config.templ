@@ -28,7 +28,19 @@ STARTD_CRON_ReapAbandondedContainersEE2_MODE = Periodic
 STARTD_CRON_ReapAbandondedContainersEE2_RECONFIG_RERUN = True
 STARTD_CRON_ReapAbandondedContainersEE2_ENV = "EE2_ENDPOINT={{ .Env.EE2_ENDPOINT }} SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }} SERVICE_ENDPOINT={{ .Env.SERVICE_ENDPOINT }} CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} DOCKER_CACHE={{ .Env.DOCKER_CACHE }} DELETE_ABANDONED_CONTAINERS={{ .Env.DELETE_ABANDONED_CONTAINERS }}"
 
+# Tmpwatch $CONDOR_SUBMIT_WORKDIR
+STARTD_CRON_ManageCondorSubmitWorkdir_EXECUTABLE = tmpwatch
+STARTD_CRON_ManageCondorSubmitWorkdir_ARGS = 14d $CONDOR_SUBMIT_WORKDIR
+STARTD_CRON_ManageCondorSubmitWorkdir_PERIOD = 86400s
+STARTD_CRON_ManageCondorSubmitWorkdir_MODE = Periodic
+STARTD_CRON_ManageCondorSubmitWorkdir_RECONFIG_RERUN = True
+STARTD_CRON_ManageCondorSubmitWorkdir_ENV = "CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} "
 
+# Prune docker every 14 days
+STARTD_CRON_ManageVarLibDocker_EXECUTABLE = docker
+STARTD_CRON_ManageVarLibDocker_ARGS = system prune -a -f
+STARTD_CRON_ManageVarLibDocker_PERIOD = 14d
+STARTD_CRON_ManageVarLibDocker_MODE = Periodic
 
-STARTD_CRON_JOBLIST = NodeHealth ReapAbandondedContainers ReapAbandondedContainersEE2
+STARTD_CRON_JOBLIST = NodeHealth ReapAbandondedContainers ReapAbandondedContainersEE2 ManageVarLibDocker ManageCondorSubmitWorkdir
 # STARTD_CRON_AUTOPUBLISH = If_Changed
