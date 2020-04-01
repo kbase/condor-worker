@@ -222,9 +222,13 @@ def checkEndpoints():
     }
 
     for service in services:
-        response = requests.post(url=service, json=services[service], timeout=30)
-        if response.status_code != 200:
-            message = f"{service} is not available"
+        try:
+            response = requests.post(url=service, json=services[service], timeout=30)
+            if response.status_code != 200:
+                message = f"{service} is not available."
+                exit_unsuccessfully(message)
+        except Exception as e:
+            message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
 
 
