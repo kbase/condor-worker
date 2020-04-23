@@ -56,6 +56,9 @@ SUSPEND = False
 PREEMPT = False
 KILL = False
 
+# Set 12 hours maximum wait time for jobs to finish for using condor_drain
+MAXJOBRETIREMENTTIME = 43200
+
 # Machine resource settings
 # {{ if .Env.NUM_SLOTS -}} NUM_SLOTS = {{ .Env.NUM_SLOTS }} {{- end }}
 
