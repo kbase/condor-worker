@@ -115,6 +115,9 @@ def kill_docker_container(cnt_id: str):
         pass
 
 
+def mark_job_as_failed(job_id):
+    ee2
+
 def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
     # send_slack_message(f"Job CONTAINER_REAPER is KILLING DEAD JOBS at {datetime.datetime.now()}")
     for cnt_id in docker_processes:
@@ -124,6 +127,7 @@ def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
             notify_slack(cnt_id, labels, running_jobs)
             if kill is True:
                 kill_docker_container(cnt_id)
+                mark_job_as_failed(job_id)
 
 
 
