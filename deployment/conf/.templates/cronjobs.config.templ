@@ -2,33 +2,46 @@
 
 # startd hook to check if node is healthy
 STARTD_CRON_NodeHealth_EXECUTABLE = /kb/deployment/bin/cron/health_check.py
-STARTD_CRON_NodeHealth_PERIOD = 300s
+STARTD_CRON_NodeHealth_PERIOD = 6m
 STARTD_CRON_NodeHealth_MODE = Periodic
 STARTD_CRON_NodeHealth_RECONFIG_RERUN = True
 STARTD_CRON_NodeHealth_ENV = "NJS_ENDPOINT={{ .Env.NJS_ENDPOINT }} SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }} SERVICE_ENDPOINT={{ .Env.SERVICE_ENDPOINT }} CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} DOCKER_CACHE={{ .Env.DOCKER_CACHE }} DELETE_ABANDONED_CONTAINERS={{ .Env.DELETE_ABANDONED_CONTAINERS }}"
 
 # startd hook to delete exited containers
 STARTD_CRON_DeleteExitedContainers_EXECUTABLE = /kb/deployment/bin/cron/delete_exited_containers.py
-STARTD_CRON_DeleteExitedContainers_PERIOD = 600s
+STARTD_CRON_DeleteExitedContainers_PERIOD = 10m
 STARTD_CRON_DeleteExitedContainers_MODE = Periodic
 STARTD_CRON_DeleteExitedContainers_RECONFIG_RERUN = True
 STARTD_CRON_DeleteExitedContainers_ENV = "SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }}"
 
 # startd hook to delete abandoned containers
 STARTD_CRON_ReapAbandondedContainers_EXECUTABLE = /kb/deployment/bin/cron/container_reaper.py
-STARTD_CRON_ReapAbandondedContainers_PERIOD = 360s
+STARTD_CRON_ReapAbandondedContainers_PERIOD = 6m
 STARTD_CRON_ReapAbandondedContainers_MODE = Periodic
 STARTD_CRON_ReapAbandondedContainers_RECONFIG_RERUN = True
 STARTD_CRON_ReapAbandondedContainers_ENV = "NJS_ENDPOINT={{ .Env.NJS_ENDPOINT }} SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }} SERVICE_ENDPOINT={{ .Env.SERVICE_ENDPOINT }} CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} DOCKER_CACHE={{ .Env.DOCKER_CACHE }} DELETE_ABANDONED_CONTAINERS={{ .Env.DELETE_ABANDONED_CONTAINERS }}"
 
 # startd hook to delete abandoned containers
 STARTD_CRON_ReapAbandondedContainersEE2_EXECUTABLE = /kb/deployment/bin/cron/container_reaper_ee2.py
-STARTD_CRON_ReapAbandondedContainersEE2_PERIOD = 360s
+STARTD_CRON_ReapAbandondedContainersEE2_PERIOD = 6m
 STARTD_CRON_ReapAbandondedContainersEE2_MODE = Periodic
 STARTD_CRON_ReapAbandondedContainersEE2_RECONFIG_RERUN = True
 STARTD_CRON_ReapAbandondedContainersEE2_ENV = "EE2_ENDPOINT={{ .Env.EE2_ENDPOINT }} SLACK_WEBHOOK_URL={{ .Env.SLACK_WEBHOOK_URL }} SERVICE_ENDPOINT={{ .Env.SERVICE_ENDPOINT }} CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} DOCKER_CACHE={{ .Env.DOCKER_CACHE }} DELETE_ABANDONED_CONTAINERS={{ .Env.DELETE_ABANDONED_CONTAINERS }}"
 
+# Tmpwatch $CONDOR_SUBMIT_WORKDIR
+STARTD_CRON_ManageCondorSubmitWorkdir_EXECUTABLE = /usr/sbin/tmpwatch
+STARTD_CRON_ManageCondorSubmitWorkdir_ARGS = 14d $CONDOR_SUBMIT_WORKDIR
+STARTD_CRON_ManageCondorSubmitWorkdir_PERIOD = 24h
+STARTD_CRON_ManageCondorSubmitWorkdir_MODE = Periodic
+STARTD_CRON_ManageCondorSubmitWorkdir_RECONFIG_RERUN = True
+STARTD_CRON_ManageCondorSubmitWorkdir_ENV = "CONDOR_SUBMIT_WORKDIR={{ .Env.CONDOR_SUBMIT_WORKDIR }} "
 
+# Prune docker every 14 days.. This works right now, but need to redirect to a script
+STARTD_CRON_ManageVarLibDocker_EXECUTABLE = /usr/bin/docker
+STARTD_CRON_ManageVarLibDocker_ARGS = system prune -a -f
+STARTD_CRON_ManageVarLibDocker_PERIOD = 336h
+STARTD_CRON_ManageVarLibDocker_MODE = Periodic
+STARTD_CRON_ManageCondorSubmitWorkdir_RECONFIG_RERUN = True
 
-STARTD_CRON_JOBLIST = NodeHealth ReapAbandondedContainers ReapAbandondedContainersEE2
+STARTD_CRON_JOBLIST = NodeHealth ReapAbandondedContainersEE2 ManageVarLibDocker ManageCondorSubmitWorkdir
 # STARTD_CRON_AUTOPUBLISH = If_Changed

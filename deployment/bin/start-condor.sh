@@ -38,4 +38,5 @@ else
     chmod 01777 /cdr${EXECUTE_SUFFIX}/../logs
 fi
 
+docker system prune -a -f
 exec $(condor_config_val MASTER) -f -t 2>&1
