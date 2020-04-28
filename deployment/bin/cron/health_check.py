@@ -35,8 +35,9 @@ def send_slack_message(message: str):
 debug = False
 scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 scratch += os.environ.get("EXECUTE_SUFFIX", "")
-check_condor_starter_health = os.environ.get("CHECK_CONDOR_STARTER_HEALTH",
-                                             "true").lower() == 'true'
+check_condor_starter_health = (
+    os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true"
+)
 
 # Endpoint
 
@@ -88,13 +89,13 @@ def check_if_nobody():
 
 
 def check_for_condor_starter():
-    return process_is_running('condor_starter')
+    return process_is_running("condor_starter")
 
 
 def process_is_running(processName):
-    '''
+    """
     Check if there is any running process that contains the given name processName.
-    '''
+    """
     # Iterate over the all the running process
     for proc in psutil.process_iter():
         try:
@@ -103,7 +104,7 @@ def process_is_running(processName):
                 return True
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-    return False;
+    return False
 
 
 def test_condor_starter():
@@ -143,7 +144,9 @@ def test_docker_socket():
     if socket_gid in gids:
         return
 
-    message = f"Cannot access docker socket, check to make sure permissions of user in {gids}"
+    message = (
+        f"Cannot access docker socket, check to make sure permissions of user in {gids}"
+    )
     exit_unsuccessfully(message)
 
 
@@ -167,9 +170,7 @@ def test_world_writeable():
     if perms == "01777" or perms == "1777" or perms == "0o1777":
         return
     else:
-        message = (
-            f"Cannot access {scratch} gid={os.stat(scratch).st_gid} perms={perms}"
-        )
+        message = f"Cannot access {scratch} gid={os.stat(scratch).st_gid} perms={perms}"
         exit_unsuccessfully(message)
 
 
@@ -190,7 +191,10 @@ def test_enough_space(mount_point, nickname, percentage):
             message = f"Can't access {mount_point} ({nickname}) or not enough space ({usage}% > {percentage}%)"
             exit_unsuccessfully(message)
     except Exception as e:
-        message = f"Can't access {mount_point} ({nickname}) or not enough space {usage}" + str(e)
+        message = (
+            f"Can't access {mount_point} ({nickname}) or not enough space {usage}"
+            + str(e)
+        )
         exit_unsuccessfully(message)
 
 
