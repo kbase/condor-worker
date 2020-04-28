@@ -102,6 +102,10 @@ def notify_slack(cnt_id: str, labels: dict(), running_job_ids: List):
 
 
 def kill_docker_container(cnt_id: str):
+    """
+    Kill a docker container. The job finish script should clean up after itself.
+    :param cnt_id: The container to kill/remove
+    """
     if kill is True:
         cnt = dc.containers.get(cnt_id)  # type: Container
         try:
@@ -111,14 +115,14 @@ def kill_docker_container(cnt_id: str):
                 cnt.remove(force=True)
             except Exception:
                 send_slack_message(f"Couldn't delete {cnt_id} on {hostname}")
-    else:
-        pass
 
-
-def mark_job_as_failed(job_id):
-    ee2
 
 def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
+    """
+    Check whether there are runaway docker containers
+    :param running_jobs:  A list of condor jobs gathered from the starter scripts
+    :param docker_processes: A list of docker containers
+    """
     # send_slack_message(f"Job CONTAINER_REAPER is KILLING DEAD JOBS at {datetime.datetime.now()}")
     for cnt_id in docker_processes:
         labels = docker_processes[cnt_id]
@@ -127,7 +131,7 @@ def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
             notify_slack(cnt_id, labels, running_jobs)
             if kill is True:
                 kill_docker_container(cnt_id)
-                mark_job_as_failed(job_id)
+
 
 
 
