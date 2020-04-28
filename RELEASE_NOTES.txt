@@ -1,3 +1,10 @@
+1.0.8
+======
+* Removed support for njs jobs
+* Add tmpwatch for /cdr/
+* Add docker system prune cronjob and upon startup
+* Health check fails for 15% threshold on memory instead of 10%
+
 1.0.7.1 and below
 =====
 * Removed StartJobs requirement
