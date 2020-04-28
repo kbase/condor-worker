@@ -8,7 +8,7 @@ if [ "$GROUPMOD_DOCKER" ] ; then
 fi
 
 if [ "$POOL_PASSWORD" ] ; then
-    /usr/sbin/condor_store_cred -p "$POOL_PASSWORD" -f `condor_config_val SEC_PASSWORD_FILE`
+    /usr/sbin/condor_store_cred -p "$POOL_PASSWORD" -f "$(condor_config_val SEC_PASSWORD_FILE)"
 fi
 
 if [ "$SET_NOBODY_USER_GUID" ] ; then
@@ -26,16 +26,17 @@ fi
 # Not sure which one of these paths will be used for logs yet
 
 if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
-    mkdir -p $CONDOR_SUBMIT_WORKDIR${EXECUTE_SUFFIX}
-    chmod 01777 $CONDOR_SUBMIT_WORKDIR${EXECUTE_SUFFIX}
-    chmod 01777 $CONDOR_SUBMIT_WORKDIR$/logs
-    chmod 01777 $CONDOR_SUBMIT_WORKDIR${EXECUTE_SUFFIX}/logs
-    chmod 01777 $CONDOR_SUBMIT_WORKDIR${EXECUTE_SUFFIX}/../logs
+    mkdir -p "${CONDOR_SUBMIT_WORKDIR}/${EXECUTE_SUFFIX}"
+    chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}"
+    chmod 01777 "$CONDOR_SUBMIT_WORKDIR/logs"
+    chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}/logs"
+    chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}/../logs"
 else
-    mkdir -p /cdr${EXECUTE_SUFFIX}
-    chmod 01777 /cdr${EXECUTE_SUFFIX}
-    chmod 01777 /cdr${EXECUTE_SUFFIX}/logs
-    chmod 01777 /cdr${EXECUTE_SUFFIX}/../logs
+    mkdir -p "/cdr/${EXECUTE_SUFFIX}"
+    chmod 01777 "/cdr/${EXECUTE_SUFFIX}"
+    chmod 01777 "/cdr/${EXECUTE_SUFFIX}/logs"
+    chmod 01777 "/cdr/${EXECUTE_SUFFIX}/../logs"
 fi
 
-exec $(condor_config_val MASTER) -f -t 2>&1
+docker system prune -a -f
+exec "$(condor_config_val MASTER)" -f -t 2>&1
