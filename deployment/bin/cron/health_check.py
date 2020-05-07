@@ -39,12 +39,6 @@ check_condor_starter_health = (
     os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true"
 )
 
-# Endpoint
-
-endpoint = os.environ.get("SERVICE_ENDPOINT", None)
-
-if endpoint is None:
-    exit("SERVICE_ENDPOINT is not defined")
 
 # Docker Cache
 var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
@@ -72,6 +66,15 @@ def exit_unsuccessfully(message: str, send_to_slack=True):
         )
 
     sys.exit(1)
+
+# Endpoint
+
+endpoint = os.environ.get("EE2_ENDPOINT", None)
+
+if endpoint is None:
+    exit_unsuccessfully("EE2_ENDPOINT is not defined")
+
+
 
 
 def exit_successfully():
