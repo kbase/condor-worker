@@ -205,12 +205,6 @@ def checkEndpoints():
 
     services = {
         f"{endpoint}/auth": {},
-        f"{endpoint}/njs_wrapper": {
-            "method": "NarrativeJobService.status",
-            "version": "1.1",
-            "id": 1,
-            "params": [],
-        },
         f"{endpoint}/catalog": {
             "method": "Catalog.status",
             "version": "1.1",
