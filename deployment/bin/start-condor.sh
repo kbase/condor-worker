@@ -38,5 +38,9 @@ else
     chmod 01777 "/cdr/${EXECUTE_SUFFIX}/../logs"
 fi
 
+# Ensure condor can write to logs, since this is now mounted from host
+chown $(condor_config_val log) condor
+
+
 docker system prune -a -f
 exec "$(condor_config_val MASTER)" -f -t 2>&1
