@@ -1,4 +1,4 @@
-FROM centos:7
+FROM quay.io/kbase/centos:7
 ENV container docker
 
 # Get commonly used utilities
