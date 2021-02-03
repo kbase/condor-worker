@@ -39,9 +39,11 @@ else
 fi
 
 # Ensure condor user can write to logs, since this is now mounted from host
-chown condor $(condor_config_val log)
-# Ensure condor user can modify the lock files
-chown condor $(condor_config_val lock)
+# Ensure condor user can modify the lock files and run files as of 8.9.10
+chown condor $(condor_config_val log) $(condor_config_val lock) $(condor_config_val run)
+
+
+
 
 
 docker system prune -a -f
