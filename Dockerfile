@@ -54,7 +54,6 @@ ENV PATH /miniconda/bin:$PATH
 #     python ./setup.py install && cd .. && rm -rf JobRunner
 
 RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
-#auth_service_url=https://appdev.kbase.us/services/auth/api/legacy/KBase/Sessions/Login
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
