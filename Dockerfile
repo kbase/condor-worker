@@ -55,9 +55,13 @@ ENV PATH /miniconda/bin:$PATH
 
 RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
 
+RUN cd /opt && wget https://github.com/broadinstitute/cromwell/releases/download/57/cromwell-57.jar
+
 COPY --chown=kbase deployment/ /kb/deployment/
 
-RUN /kb/deployment/bin/install_python_dependencies.sh
+RUN \
+    /kb/deployment/bin/install_python_dependencies.sh && \
+    cp /kb/deployment/bin/wdl_run /usr/bin/wdl_run
 
 ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
 

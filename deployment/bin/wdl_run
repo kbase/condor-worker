@@ -1,0 +1,7 @@
+#!/bin/sh
+
+CROMWELL=/opt/cromwell-57.jar
+CROMWELL_CONFIG=/kb/deployment/conf/cromwell.conf
+java -Dconfig.file=$CROMWELL_CONFIG -jar $CROMWELL run -m meta.json -i $1 $2
+#sleep 120
+
