@@ -1,3 +1,9 @@
+1.0.9
+=======
+* Add GHA Actions
+* Move from quay to GHCR.io
+* New Base Image from  HTCondor Dockerhub
+
 1.0.8.4
 =======
 * Move from dockerhub to quay
