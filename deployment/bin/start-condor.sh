@@ -9,6 +9,8 @@ fi
 
 if [ "$POOL_PASSWORD" ] ; then
     /usr/sbin/condor_store_cred -p "$POOL_PASSWORD" -f "$(condor_config_val SEC_PASSWORD_FILE)"
+    echo "$POOL_PASSWORD" | condor_store_cred -c add
+    umask 0077; condor_token_create -identity condor@mypool > /etc/condor/tokens.d/condor@mypool
 fi
 
 if [ "$SET_NOBODY_USER_GUID" ] ; then
