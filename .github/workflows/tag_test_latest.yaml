@@ -6,6 +6,7 @@ name: Tag Latest Test Image
     - develop
     types:
     - closed
+  workflow_dispatch:
 jobs:
   docker_tag:
     runs-on: ubuntu-latest

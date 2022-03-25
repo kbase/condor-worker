@@ -5,6 +5,7 @@ name: Build Prod RC Image
     branches:
     - master
     - main
+    - workflow_dispatch
     types:
     - opened
     - synchronize

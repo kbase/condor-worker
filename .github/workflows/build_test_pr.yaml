@@ -8,6 +8,7 @@ name: Build Test Image
     - opened
     - synchronize
     - ready_for_review
+  workflow_dispatch:
 jobs:
   docker_build:
     runs-on: ubuntu-latest
