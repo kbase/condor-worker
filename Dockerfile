@@ -37,6 +37,9 @@ RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
+# Install dependencies for JobRunner
+ENV PATH /miniconda/bin:$PATH
+RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
 RUN /kb/deployment/bin/install_python_dependencies.sh
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
