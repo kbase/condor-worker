@@ -5,11 +5,11 @@ name: Build Prod RC Image
     branches:
     - master
     - main
-    - workflow_dispatch
     types:
     - opened
     - synchronize
     - ready_for_review
+  workflow_dispatch:
 jobs:
   docker_build:
     runs-on: ubuntu-latest
