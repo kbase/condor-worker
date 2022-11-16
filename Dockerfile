@@ -1,4 +1,4 @@
-FROM htcondor/execute:9.7-el7
+FROM htcondor/execute:9.12.0-el7
 ENV container docker
 
 # Ge$t commonly used utilities
