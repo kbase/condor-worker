@@ -8,10 +8,7 @@ if [ "$CONDOR_JWT_TOKEN" ] ; then
     chmod 600 /etc/condor/tokens.d/JWT
 fi
 
-if [ "$TRUST_DOMAIN" ] ; then
-    echo "$TRUST_DOMAIN" >> /etc/condor/condor_config.local
-fi
-
 if [ "$COLLECTOR_HOST" ] ; then
-    echo "$COLLECTOR_HOST" >> /etc/condor/condor_config.local
+    echo "COLLECTOR_HOST = $COLLECTOR_HOST" >> /etc/condor/condor_config.local
+    /update-config
 fi
