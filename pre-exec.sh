@@ -13,12 +13,12 @@ fi
 
 #Note the clientgroup will require quotation marks in the env variable
 if [ "$CLIENTGROUP" ] ; then
-    echo "CLIENTGROUP = $CLIENTGROUP >> /etc/condor/condor_config.local
+    echo "CLIENTGROUP = $CLIENTGROUP >> /etc/condor/condor_config.local"
 fi
 
 # To keep docker partition from filling up
 if [ "$DOCKER_SYSTEM_PRUNE" ] ; then
-    docker system prune -a -f
+    docker system prune -a -fg
 fi
 
 
