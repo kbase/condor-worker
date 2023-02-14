@@ -22,6 +22,13 @@ fi
 
 
 #TODO Make nobody user able to run jobs
+####################### HOST PATHS ############################################
+DIRS_TO_CREATE=$(condor_config_val DIRS_TO_CREATE)
+mkdir -p $DIRS_TO_CREATE
+chmod 770 $DIRS_TO_CREATE && chown root:condor $DIRS_TO_CREATE
+/update-config
+####################### HOST PATHS ############################################
+
 
 
 # Ensure condor user can write to logs, since these are mounted onto host
