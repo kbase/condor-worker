@@ -1,4 +1,3 @@
-Dockerfile
 FROM htcondor/execute:9.12.0-el7
 ENV container docker
 
