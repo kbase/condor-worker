@@ -29,6 +29,7 @@ mkdir -p $DIRS_TO_CREATE
 chmod 770 $DIRS_TO_CREATE && chown root:condor $DIRS_TO_CREATE
 # /condor/execute root-squashed or not condor-owned: requiring world-writability
 chmod 01777 $(condor_config_val EXECUTE)
+chmod 01777 /var/run/docker.sock
 /update-config
 ####################### HOST PATHS ############################################
 

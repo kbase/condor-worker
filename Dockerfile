@@ -1,3 +1,4 @@
+Dockerfile
 FROM htcondor/execute:9.12.0-el7
 ENV container docker
 
@@ -39,7 +40,7 @@ COPY --chown=kbase deployment/ /kb/deployment/
 
 # Install dependencies for JobRunner
 ENV PATH /miniconda/bin:$PATH
-RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
+#RUN wget https://raw.githubusercontent.com/kbase/JobRunner/ee2/requirements.txt && pip install -r requirements.txt && rm requirements.txt
 RUN /kb/deployment/bin/install_python_dependencies.sh
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
