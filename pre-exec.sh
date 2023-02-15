@@ -12,16 +12,16 @@ if [ "$COLLECTOR_HOST" ] ; then
     echo "COLLECTOR_HOST = $COLLECTOR_HOST" >> /etc/condor/condor_config.local
 fi
 
-# Change execute directory for multiple works on the same host, instead of the default /cdr/ dir
+# This has to be the same exact path as the mount otherwise the JobRunner doesn't understand relative mounts
+# e.g. You cannot mount /cdr/staging as /execute, you must mount /cdr/staging as /cdr/staging
 if [ "$EXECUTE" ] ; then
-  echo "EXECUTE = $EXECUTE >> /etc/condor/condor_config.local"
-
+  echo "EXECUTE = $EXECUTE" >> /etc/condor/condor_config.local
 fi
 ######################## Required Values END ##########################################
 
 #Note the clientgroup will require quotation marks in the env variable
 if [ "$CLIENTGROUP" ] ; then
-    echo "CLIENTGROUP = $CLIENTGROUP >> /etc/condor/condor_config.local"
+    echo "CLIENTGROUP = $CLIENTGROUP" >> /etc/condor/condor_config.local
 fi
 
 # To keep docker partition from filling up
