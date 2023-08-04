@@ -2,8 +2,8 @@ FROM htcondor/execute:lts-el8
 ENV container docker
 
 # Ge$t commonly used utilities
-RUN yum install -y deltarpm
 RUN yum -y update && yum upgrade -y 
+RUN yum install -y deltarpm
 RUN yum -y install -y epel-release wget which git deltarpm gcc libcgroup libcgroup-tools stress-ng tmpwatch
 
 # Install docker binaries 
