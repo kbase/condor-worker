@@ -3,7 +3,7 @@ ENV container docker
 
 # Ge$t commonly used utilities
 RUN yum -y update && yum upgrade -y 
-RUN yum install -y deltarpm
+RUN yum install -y drpm
 RUN yum -y install -y epel-release wget which git deltarpm gcc libcgroup libcgroup-tools stress-ng tmpwatch
 
 # Install docker binaries 
