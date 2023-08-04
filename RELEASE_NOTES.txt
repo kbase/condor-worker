@@ -1,3 +1,11 @@
+1.0.10
+========
+*  Fix health check
+*  Fix dependencies for JobRunner
+*  Pin versions due for Python
+*  Update base image to `htcondor/execute:lts-el8`
+
+
 1.0.9
 =======
 * Add GHA Actions
