@@ -203,8 +203,7 @@ def checkEndpoints():
     Check auth/njs/catalog/ws
     """
 
-    services = {
-        f"{endpoint}/auth": {},
+    post_services = {
         f"{endpoint}/catalog": {
             "method": "Catalog.status",
             "version": "1.1",
@@ -218,16 +217,22 @@ def checkEndpoints():
             "params": [],
         },
     }
+    get_services = {f"{endpoint}/auth": {}}
 
-    for service in services:
+    for service in {**post_services, **get_services}:
         try:
-            response = requests.post(url=service, json=services[service], timeout=30)
+            if service in post_services:
+                response = requests.post(url=service, json=post_services[service], timeout=30)
+            else:
+                response = requests.get(url=service, timeout=30)
             if response.status_code != 200:
                 message = f"{service} is not available."
                 exit_unsuccessfully(message)
         except Exception as e:
             message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
+
+        
 
 
 def main():
