@@ -4,7 +4,7 @@ ENV container docker
 # Ge$t commonly used utilities
 RUN yum -y update && yum upgrade -y 
 RUN yum install -y drpm
-RUN yum -y install -y epel-release wget which git deltarpm gcc libcgroup libcgroup-tools stress-ng tmpwatch
+RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
