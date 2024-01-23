@@ -17,6 +17,20 @@ import docker
 import psutil
 import requests
 
+# Endpoint
+
+endpoint = os.environ.get("SERVICE_ENDPOINT", None)
+
+if endpoint is None:
+    exit("SERVICE_ENDPOINT is not defined")
+
+# Docker Cache
+var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
+
+user = "nobody"
+pid = pwd.getpwnam(user).pw_uid
+gid = pwd.getpwnam(user).pw_gid
+
 
 def send_slack_message(message: str):
     """
@@ -36,25 +50,8 @@ debug = False
 scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
 scratch += os.environ.get("EXECUTE_SUFFIX", "")
 check_condor_starter_health = (
-    os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true"
+        os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true"
 )
-
-# Endpoint
-
-endpoint = os.environ.get("SERVICE_ENDPOINT", None)
-
-if endpoint is None:
-    exit("SERVICE_ENDPOINT is not defined")
-
-# Docker Cache
-var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
-
-user = "nobody"
-pid = pwd.getpwnam(user).pw_uid
-gid = pwd.getpwnam(user).pw_gid
-
-
-# TODO Report to nagios
 
 
 def exit_unsuccessfully(message: str, send_to_slack=True):
@@ -66,7 +63,7 @@ def exit_unsuccessfully(message: str, send_to_slack=True):
     print("- update:true")
     now = datetime.datetime.now()
 
-    if send_to_slack is True:
+    if send_to_slack:
         send_slack_message(
             f"POSSIBLE BLACK HOLE: Ran healthcheck at {now} on {socket.gethostname()} with failure: {message}"
         )
@@ -145,7 +142,7 @@ def test_docker_socket():
         return
 
     message = (
-        f"Cannot access docker socket, check to make sure permissions of user in {gids}"
+        f"test_docker_socket: Cannot access docker socket, check to make sure permissions of user in {gids}"
     )
     exit_unsuccessfully(message)
 
@@ -156,13 +153,13 @@ def test_docker_socket2():
     """
     dc = docker.from_env()
     if len(dc.containers.list()) < 1:
-        message = f"Cannot access docker socket"
+        message = f"Nobody User cannot access docker socket"
         exit_unsuccessfully(message)
 
 
-def test_world_writeable():
+def test_scratch_world_writeable():
     """
-    Check to see if /mnt/awe/condor is writeable
+    Check to see if /cdr/scratch is writeable
     """
     # Strip out octal 0o
     perms = str(oct(stat.S_IMODE(os.stat(scratch).st_mode))).lstrip("0").lstrip("o")
@@ -170,7 +167,7 @@ def test_world_writeable():
     if perms == "01777" or perms == "1777" or perms == "0o1777":
         return
     else:
-        message = f"Cannot access {scratch} gid={os.stat(scratch).st_gid} perms={perms}"
+        message = f"Scratch not world writeable: Cannot access {scratch} gid={os.stat(scratch).st_gid} perms={perms}"
         exit_unsuccessfully(message)
 
 
@@ -184,21 +181,19 @@ def test_enough_space(mount_point, nickname, percentage):
     try:
         usage = subprocess.check_output(cmd, shell=True).decode().strip()
         if int(usage) < percentage:
-            # send_slack_message(
-            #     f"The amount of usage  {usage}  for {mount_point} ({nickname}) which is less than  {percentage}")
             return
         else:
             message = f"Can't access {mount_point} ({nickname}) or not enough space ({usage}% > {percentage}%)"
             exit_unsuccessfully(message)
     except Exception as e:
         message = (
-            f"Can't access {mount_point} ({nickname}) or not enough space {usage}"
-            + str(e)
+                f"Can't access {mount_point} ({nickname}) or not enough space {usage}"
+                + str(e)
         )
         exit_unsuccessfully(message)
 
 
-def checkEndpoints():
+def check_kbase_endpoints():
     """
     Check auth/njs/catalog/ws
     """
@@ -232,20 +227,18 @@ def checkEndpoints():
             message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
 
-        
-
 
 def main():
     try:
         # send_slack_message(f"Job HEALTH_CHECK is beginning at {datetime.datetime.now()}")
         test_docker_socket()
         test_docker_socket2()
-        test_world_writeable()
+        test_scratch_world_writeable()
         test_enough_space(scratch, "scratch", 95)
         test_enough_space(var_lib_docker, "docker", 95)
         test_free_memory()
         test_condor_starter()
-        checkEndpoints()
+        check_kbase_endpoints()
         # send_slack_message(f"Job HEALTH_CHECK is ENDING at {datetime.datetime.now()}")
     except Exception as e:
         exit_unsuccessfully(str(e))
