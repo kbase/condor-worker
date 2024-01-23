@@ -5,6 +5,8 @@ ENV container docker
 RUN yum -y update && yum upgrade -y 
 RUN yum install -y drpm
 RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch
+RUN yum install -y drpm
+RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
@@ -37,8 +39,6 @@ RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-# Install dependencies for JobRunner ee2 branch. These might not match up with the other JobRunner branch
-ENV PATH /miniconda/bin:$PATH
 RUN /kb/deployment/bin/install_python_dependencies.sh
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to

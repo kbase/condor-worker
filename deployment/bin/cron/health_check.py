@@ -227,6 +227,8 @@ def check_kbase_endpoints():
             message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
 
+        
+
 
 def main():
     try:
