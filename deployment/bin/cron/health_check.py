@@ -133,8 +133,8 @@ def test_docker_socket():
     """
     Check to see if the nobody user has access to the docker socket
     """
-    socket = "/var/run/docker.sock"
-    socket_gid = os.stat(socket).st_gid
+    socket_location = "/var/run/docker.sock"
+    socket_gid = os.stat(socket_location).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
     gids = [999, 996, 995, 987]

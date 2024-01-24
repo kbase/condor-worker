@@ -26,7 +26,7 @@ if __name__ == "__main__":
     hostname = socket.gethostname()
     dc = docker.from_env()
     ec = dc.containers.list(filters={"status": "exited"})
-    count = len(ec)
-    if count > 0:
+    container_image_names = [c.attrs["Config"]["Image"] for c in ec]
+    if container_image_names:
         dc.containers.prune()
-        send_slack_message(f"Deleted {count} stopped containers on {hostname}")
+        send_slack_message(f"Deleted {len(ec)} `exited` containers on {hostname} {container_image_names}")

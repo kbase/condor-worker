@@ -69,7 +69,11 @@ def find_dockerhub_jobs() -> Dict:
 
 
 def find_running_jobs():
-    "Return a list of job ids from running job processes. Since python procs have multiple entries, keep only 1 version"
+    """
+    Return a list of job ids from running job processes.
+    Since python procs have multiple entries, keep only 1 version
+    """
+
     # send_slack_message(f"Job CONTAINER_REAPER is FINDING RUNNING JOBS at {datetime.datetime.now()}")
     ls = []
     for p in psutil.process_iter(attrs=["name", "cmdline"]):
