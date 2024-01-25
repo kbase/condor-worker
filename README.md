@@ -1,4 +1,4 @@
-# Condor-worker requirements
+# Custom DockerFile, Configurations, Helper Scripts, and CronJobs for KBase Condor Worker
 
 
 The condor workers require 
