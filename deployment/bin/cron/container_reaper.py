@@ -12,6 +12,7 @@ import json
 import os
 import socket
 import subprocess
+import time
 from datetime import datetime, timedelta
 from typing import Set
 
@@ -59,7 +60,14 @@ def get_running_time_message(container, title=""):
     formatted_running_time = f"{days}D:{hours}H"
     return f"{title}:{hostname} {image_name}:{user_name}:{formatted_running_time}"
 
-
+def remove_with_backoff(container,message,backoff=30):
+    try:
+        container.stop()
+        time.sleep(backoff)  # Wait for backoff period before attempting to remove
+        container.remove()
+    except Exception as e:
+        # Not much we can do here, just hope that the next pass will remove it
+        pass
 def reap_containers_running_more_than_7_days(potential_containers: Set[Container]):
     old_containers = filter_containers_by_time(potential_containers, days=7)
 
@@ -67,11 +75,7 @@ def reap_containers_running_more_than_7_days(potential_containers: Set[Container
         for old_container in old_containers:
             message = get_running_time_message(old_container, title="reaper7daylimit")
             send_slack_message(message)
-            try:
-                container.stop()
-                container.remove()
-            except Exception as e:
-                send_slack_message(f"Error removing container: {message}")
+            remove_with_backoff(old_container, message)
 
 
 def reap_containers_when_there_is_no_starter(potential_containers: Set[Container]):
@@ -88,11 +92,7 @@ def reap_containers_when_there_is_no_starter(potential_containers: Set[Container
         for runaway_container in runaway_containers:
             message = get_running_time_message(runaway_container, title="reaper_no_starter")
             send_slack_message(message)
-            try:
-                container.stop()
-                container.remove()
-            except Exception as e:
-                send_slack_message(f"Error removing container: {message}")
+            remove_with_backoff(container,message)
 
 
 def check_for_condor_starter():

@@ -59,5 +59,5 @@ The condor workers require
 #### Required Environmental Variables
 * SLACK_WEBHOOK_URL (dev or prod channels)
 * CONTAINER_REAPER_ENDPOINTS, e.g. https://kbase.us/services/ee2,https://services.kbase.us/services/ee2,
-* DELETE_ABANDONED_CONTAINERS required to be set to true
+* DELETE_ABANDONED_CONTAINERS required to be set to true in order to run both checks
 
