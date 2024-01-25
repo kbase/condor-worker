@@ -29,6 +29,13 @@ The condor workers require
 
 ## HTCondor STARTD_CRON Environment Variables
 
+* The cronjobs pass their environmental variables to the scripts they run.
+* You can check the condor start log for their status and output when something goes wrong.
+* You won't know if the cronjob is running unless you check the condor start log for a missing env var or possibly a job is stuck in a NODE_IS_HEALTHY=false state
+* If an env var is present in the cronjobs.config, it is required, otherwise the template engine won't render it
+* Q: Why are they in both the cronjobs.config and ALSO in environmental vars section? A: I'm not sure. Need to look at that why https://github.com/kbase/condor-worker/issues/59
+
+
 ### NodeHealth Health Check
 
 #### Required Environmental Variables

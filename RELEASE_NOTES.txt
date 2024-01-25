@@ -1,5 +1,14 @@
 1.0.10
 ========
+* Modify Cronjobs that look for runaway containers
+* Update Documentation
+* Deprecate container_reaper_ee2.py in favor of container_reaper.py
+
+
+
+
+1.0.10
+========
 *  Fix health check
 *  Fix dependencies for JobRunner
 *  Pin versions due for Python
