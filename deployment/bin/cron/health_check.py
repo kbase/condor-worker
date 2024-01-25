@@ -17,41 +17,38 @@ import docker
 import psutil
 import requests
 
-# Endpoint
+# Optional environment variables
+var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
+scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
+scratch += os.environ.get("EXECUTE_SUFFIX", "")
+check_condor_starter_health = (os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true")
+debug = (os.environ.get("DEBUG", "false").lower() == "true")
 
+# Required environment variables
 endpoint = os.environ.get("SERVICE_ENDPOINT", None)
-
 if endpoint is None:
     exit("SERVICE_ENDPOINT is not defined")
 
-# Docker Cache
-var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
+webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
+if webhook_url is None:
+    exit("SLACK_WEBHOOK_URL is not defined")
+
+
 
 user = "nobody"
 pid = pwd.getpwnam(user).pw_uid
 gid = pwd.getpwnam(user).pw_gid
 
-
 def send_slack_message(message: str):
     """
     :param message: Escaped Message to send to slack
     """
-    # ee_notifications_channel
-    webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
     slack_data = {"text": message}
     requests.post(
         webhook_url,
         data=json.dumps(slack_data),
         headers={"Content-Type": "application/json"},
     )
-
-
-debug = False
-scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
-scratch += os.environ.get("EXECUTE_SUFFIX", "")
-check_condor_starter_health = (
-        os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true"
-)
 
 
 def exit_unsuccessfully(message: str, send_to_slack=True):
@@ -227,8 +224,6 @@ def check_kbase_endpoints():
             message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
 
-        
-
 
 def main():
     try:
@@ -241,7 +236,6 @@ def main():
         test_free_memory()
         test_condor_starter()
         check_kbase_endpoints()
-        # send_slack_message(f"Job HEALTH_CHECK is ENDING at {datetime.datetime.now()}")
     except Exception as e:
         exit_unsuccessfully(str(e))
     exit_successfully()
