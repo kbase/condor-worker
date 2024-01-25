@@ -7,7 +7,7 @@ RUN yum install -y drpm
 RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch procps
 
 
-# Install docker binaries 
+# Install docker binaries
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
 
 
