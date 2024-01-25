@@ -1,163 +1,140 @@
 #!/miniconda/bin/python
-import datetime
-import fnmatch
+"""
+This script is automatically run by the condor cronjob periodically
+in order to clean up containers > 7 days or running without a starter
+Required env vars are
+# CONTAINER_REAPER_ENDPOINTS - A comma separated list of EE2 endpoints to manage containers for
+# DELETE_ABANDONED_CONTAINERS - Set to true to enable the container reaper
+# SLACK_WEBHOOK_URL - The slack webhook url to send messages to
+"""
+
 import json
-import logging
 import os
 import socket
+import subprocess
+import time
+from datetime import datetime, timedelta
+from typing import Set
 
 import docker
-import psutil
 import requests
-from clients.NarrativeJobServiceClient import NarrativeJobService
-
-from typing import List, Dict
-
-slack_key = os.environ.get("SLACK_WEBHOOK_KEY", None)
-# ee_notifications_channel
-webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
-
-kill = os.environ.get("DELETE_ABANDONED_CONTAINERS", "false")
-if kill.lower() == "true":
-    kill = True
-else:
-    kill = False
-
-njs_endpoint_url = os.environ.get("NJS_ENDPOINT", None)
-
-if njs_endpoint_url is None:
-    raise Exception("NJS Endpoint not set")
-
-hostname = socket.gethostname()
-dc = docker.from_env()
-
-
-def find_dockerhub_jobs() -> Dict:
-    # send_slack_message(f"Job CONTAINER_REAPER is FINDING DOCKERHUB JOBS at {datetime.datetime.now()}")
-
-    try:
-        all_containers = dc.containers
-        list = all_containers.list()
-    except Exception as e:
-        send_slack_message(str(e) + hostname)
-
-    job_containers = {}
-
-    for container in list:
-        cnt_id = container.id
-        try:
-            cnt = all_containers.get(cnt_id)
-            labels = cnt.labels
-            if "condor_id" in labels.keys() and "njs_endpoint" in labels.keys():
-                labels["image"] = cnt.image
-                job_containers[cnt_id] = labels
-        except Exception as e:
-            logging.error(f"Container {cnt_id} doesn't exist anymore")
-            logging.error(e)
-
-    return job_containers
-
-
-def find_running_jobs(ps_name: str):
-    # send_slack_message(f"Job CONTAINER_REAPER is FINDING RUNNING JOBS at {datetime.datetime.now()}")
-
-    "Return a list of processes matching 'name'."
-    ls = []
-    for p in psutil.process_iter(attrs=["name", "cmdline"]):
-        if ps_name in p.info["cmdline"]:
-            ls.append(p.info["cmdline"][-2])
-    return ls
+from docker.models.containers import Container
 
 
 def send_slack_message(message: str):
     """
-
     :param message: Escaped Message to send to slack
-    :return:
     """
-
+    webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
     slack_data = {"text": message}
-    response = requests.post(
+    requests.post(
         webhook_url,
         data=json.dumps(slack_data),
         headers={"Content-Type": "application/json"},
     )
 
 
-def notify_slack(cnt_id: str, labels: dict(), running_job_ids: List):
-    now = datetime.datetime.now()
+def filter_containers_by_time(potential_containers, days=0, minutes=0):
+    filtered_containers = []
+    seven_days_ago = datetime.now() - timedelta(days=days, minutes=minutes)
 
-    job_id = labels.get("job_id", None)
-    # app_id = labels['app_id']
-    app_name = labels.get("app_name", None)
-    method_name = labels.get("method_name", None)
-    condor_id = labels.get("condor_id", None)
-    username = labels.get("user_name", None)
-
-    msg = f"cnt_id:{cnt_id} job_id:{job_id} condor_id:{condor_id} for {username} not in running_job_ids {running_job_ids} ({now}) hostname:({hostname}) app:{app_name} method:{method_name} (kill = {kill}) "
-    send_slack_message(msg)
-
-
-# @deprecated for EVENTLOG
-def notify_user(cnt_id: str, labels: Dict):
-    username = labels.get("user_name", None)
-    job_id = labels.get("job_id", None)
-    # TODO add this to a configuration somewhere or ENV variable
-    job_directory = f"/mnt/awe/condor/{username}/{job_id}"
-
-    print("About to notify")
-    print(labels)
-
-    env_files = []
-    for file in os.listdir(job_directory):
-        if fnmatch.fnmatch(file, "env_*"):
-            env_files.append(file)
-
-    print(env_files)
-    env_filepath = env_files[0]
-    if os.path.isfile(env_filepath):
-        with open(env_filepath, "r") as content_file:
-            content = content_file.readlines()
-
-        token = None
-        for line in content:
-            if "KB_AUTH_TOKEN" in line:
-                token = line.split("=")[1]
-
-        if token:
-            njs = NarrativeJobService(token=token, url=njs_endpoint_url)
-            status = njs.check_job(job_id)
-            print(status)
+    for old_container in potential_containers:
+        # Do we need to catch the chance that there is no created attribute?
+        created_time_str = old_container.attrs['Created'][:26]
+        created_time = datetime.fromisoformat(created_time_str)
+        if created_time <= seven_days_ago:
+            filtered_containers.append(old_container)
+    return filtered_containers
 
 
-def kill_docker_container(cnt_id: str):
-    if kill is True:
-        cnt = dc.containers.get(cnt_id)
-        cnt.kill()
-    else:
+def get_running_time_message(container, title=""):
+    image_name = container.attrs['Config']['Image']
+    if "kbase" in image_name:
+        image_name = image_name.split(":")[1]
+    user_name = container.attrs['Config']['Labels'].get('user_name')
+
+    total_running_time = datetime.now() - datetime.fromisoformat(container.attrs['Created'][:26])
+    days = total_running_time.days
+    hours = total_running_time.seconds // 3600
+
+    formatted_running_time = f"{days}D:{hours}H"
+    return f"{title}:{hostname} {image_name}:{user_name}:{formatted_running_time}"
+
+def remove_with_backoff(container,message,backoff=30):
+    try:
+        container.stop()
+        time.sleep(backoff)  # Wait for backoff period before attempting to remove
+        container.remove()
+    except Exception as e:
+        # Not much we can do here, just hope that the next pass will remove it
         pass
+def reap_containers_running_more_than_7_days(potential_containers: Set[Container]):
+    old_containers = filter_containers_by_time(potential_containers, days=7)
+
+    if old_containers:
+        for old_container in old_containers:
+            message = get_running_time_message(old_container, title="reaper7daylimit")
+            send_slack_message(message)
+            remove_with_backoff(old_container, message)
 
 
-def kill_dead_jobs(running_jobs: List, docker_processes: Dict):
-    # send_slack_message(f"Job CONTAINER_REAPER is KILLING DEAD JOBS at {datetime.datetime.now()}")
-    for cnt_id in docker_processes:
-        labels = docker_processes[cnt_id]
-        job_id = labels.get("job_id", None)
-        if job_id not in running_jobs:
-            if kill is True:
-                kill_docker_container(cnt_id)
-                notify_slack(cnt_id, labels, running_jobs)
+def reap_containers_when_there_is_no_starter(potential_containers: Set[Container]):
+    """
+    This function will reap containers that are running but have no starter, and have been running for 30 mins
+    """
+
+    condor_starter = check_for_condor_starter()
+    if condor_starter:
+        return
+
+    runaway_containers = filter_containers_by_time(potential_containers, minutes=30)
+    if runaway_containers:
+        for runaway_container in runaway_containers:
+            message = get_running_time_message(runaway_container, title="reaper_no_starter")
+            send_slack_message(message)
+            remove_with_backoff(container,message)
+
+
+def check_for_condor_starter():
+    result = subprocess.run("ps -ef | grep '[c]ondor_starter'", shell=True, stdout=subprocess.PIPE, text=True)
+    count = len(result.stdout.strip().split('\n')) if result.stdout.strip() else 0
+    return count > 0
 
 
 if __name__ == "__main__":
-    try:
-        # send_slack_message(f"Job CONTAINER_REAPER is beginning at {datetime.datetime.now()}")
-        name = "us.kbase.narrativejobservice.sdkjobs.SDKLocalMethodRunner"
+    """
+    PDSH_SSH_ARGS_APPEND="-o StrictHostKeyChecking=no -q" pdsh -w rancher@km[2-28]-p "docker ps | grep kbase| grep days" | sort -V |  grep -v worker
+    """
 
-        running_java_jobs = find_running_jobs(name)
-        docker_jobs = find_dockerhub_jobs()
-        kill_dead_jobs(running_java_jobs, docker_jobs)
-        # send_slack_message(f"Job CONTAINER_REAPER is ENDING at {datetime.datetime.now()}")
-    except Exception as e:
-        send_slack_message(f"FAILURE on {hostname}" + str(e.with_traceback()))
-        logging.error(e.with_traceback())
+    CONTAINER_REAPER_ENDPOINTS = os.environ.get("CONTAINER_REAPER_ENDPOINTS", "").split(",")
+    DELETE_ABANDONED_CONTAINERS = os.environ.get("DELETE_ABANDONED_CONTAINERS", "false").lower() == "true"
+
+    if not DELETE_ABANDONED_CONTAINERS:
+        exit("DELETE_ABANDONED_CONTAINERS is not set to true")
+    if not CONTAINER_REAPER_ENDPOINTS or CONTAINER_REAPER_ENDPOINTS == [""]:
+        exit("No CONTAINER_REAPER_ENDPOINTS set, unsure where to manage containers")
+
+    hostname = socket.gethostname()
+    dc = docker.from_env()
+
+    # Define the filters to specify that you are searching for only your specific containers in a multi worker environment
+    # Also add user_name as a filter to make sure you aren't killing containers that happen to have EE2_ENDPOINT set,
+    # The chances of EE2_endpoint and user_name as labels on a container should be very small.
+    # CONTAINER_REAPER_ENDPOINTS = ["https://kbase.us/services/ee2", "https://appdev.kbase.us/services/ee2", "https://services.kbase.us/services/ee2/"]
+    unique_containers = set()
+    filters = {}
+    for endpoint in CONTAINER_REAPER_ENDPOINTS:
+
+        filters.update({
+            "status": "running",
+            "label": [
+                f"ee2_endpoint={endpoint.strip()}",
+                "user_name"
+            ]
+        })
+        containers = dc.containers.list(filters=filters)
+        for container in containers:
+            unique_containers.add(container)
+
+    reap_containers_running_more_than_7_days(potential_containers=unique_containers)
+    reap_containers_when_there_is_no_starter(potential_containers=unique_containers)

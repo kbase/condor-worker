@@ -4,7 +4,8 @@ ENV container docker
 # Ge$t commonly used utilities
 RUN yum -y update && yum upgrade -y 
 RUN yum install -y drpm
-RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch
+RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch procps
+
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
@@ -14,7 +15,9 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 RUN yum install -y bzip2 \
 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
 && bash ~/miniconda.sh -b -p /miniconda \
-&& export PATH="/miniconda/bin:$PATH"
+
+
+ENV PATH="/miniconda/bin:${PATH}"
 
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
@@ -37,9 +40,6 @@ RUN rm -rf /var/cache/yum
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
-# Install dependencies for JobRunner
-ENV PATH /miniconda/bin:$PATH
-RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
 RUN /kb/deployment/bin/install_python_dependencies.sh
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
