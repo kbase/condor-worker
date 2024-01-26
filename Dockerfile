@@ -22,8 +22,6 @@ ENV PATH="/miniconda/bin:${PATH}"
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
     mkdir -p /kb/deployment/bin && \
-    mkdir -p /kb/deployment/jettybase/logs/ && \
-    touch /kb/deployment/jettybase/logs/request.log && \
     chown -R kbase /kb/deployment
 
 #INSTALL DOCKERIZE
@@ -51,7 +49,9 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       us.kbase.vcs-branch=$BRANCH \
       maintainer="Steve Chan sychan@lbl.gov"
 
-ENTRYPOINT [ "/kb/deployment/bin/dockerize" ]
+ENTRYPOINT [ "/usr/bin/docker-init" ]
+
+CMD ["/kb/deployment/bin/docker-init.sh"]
 
 WORKDIR /kb/deployment/jettybase
 

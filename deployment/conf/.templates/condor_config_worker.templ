@@ -1,14 +1,14 @@
 # Central Manager Configuration
-CONDOR_HOST = {{ default .Env.CONDOR_HOST "condor" }}             # Hostname of the central manager
-SCHEDD_HOST = {{ default .Env.SCHEDD_HOST "kbase@condor" }}       # Hostname of the schedd (scheduler)
-CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}             # Address for CCB (Connection Brokering)
-PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}       # Name of the private network
+CONDOR_HOST = {{ default .Env.CONDOR_HOST "condor" }}
+SCHEDD_HOST = {{ default .Env.SCHEDD_HOST "kbase@condor" }}
+CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}
+PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}
 
 # Access Control
 # Allow commands to execute from this machine
-ALLOW_WRITE = $(ALLOW_WRITE) *.$(UID_DOMAIN) $(HOSTNAME)          # Machines allowed to write
-ALLOW_ADMINISTRATOR = *.$(UID_DOMAIN) $(HOSTNAME)                 # Machines with admin privileges
-ALLOW_NEGOTIATOR = *.$(UID_DOMAIN) $(HOSTNAME)                    # Machines allowed to negotiate
+ALLOW_WRITE = $(ALLOW_WRITE) *.$(UID_DOMAIN) $(HOSTNAME)
+ALLOW_ADMINISTRATOR = *.$(UID_DOMAIN) $(HOSTNAME)
+ALLOW_NEGOTIATOR = *.$(UID_DOMAIN) $(HOSTNAME)
 
 # Collector Configuration
 # Set COLLECTOR_HOST to match the internal hostname, if different from DNS name.
@@ -17,17 +17,15 @@ ALLOW_NEGOTIATOR = *.$(UID_DOMAIN) $(HOSTNAME)                    # Machines all
 {{ if .Env.COLLECTOR_HOST -}} COLLECTOR_HOST = {{ .Env.COLLECTOR_HOST }} {{- end }}
 
 # TCP Communication (optional)
-# If the environment variable USE_TCP is set to true, the template will enable
+# If the environment variable USE_TCP is set to True, the template will enable
 # this group of directives that convert communications to TCP
 # per https://lists.cs.wisc.edu/archive/htcondor-users/2011-August/msg00085.shtml
-# UPDATE_COLLECTOR_WITH_TCP = True
-# WANT_UDP_COMMAND_SOCKET = False
-# COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
+
 {{ if .Env.USE_TCP -}}
-UPDATE_COLLECTOR_WITH_TCP = True                                  # Use TCP for collector updates
-UPDATE_VIEW_COLLECTOR_WITH_TCP = True                             # Use TCP for collector view updates
-WANT_UDP_COMMAND_SOCKET = False                                   # Disable UDP command socket
-COLLECTOR_MAX_FILE_DESCRIPTORS = 3000                             # Max file descriptors for collector
+UPDATE_COLLECTOR_WITH_TCP = True
+UPDATE_VIEW_COLLECTOR_WITH_TCP = True
+WANT_UDP_COMMAND_SOCKET = False
+COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
 {{- end }}
 
 # Security Settings
@@ -37,37 +35,39 @@ SEC_DEFAULT_NEGOTIATION = {{ default .Env.SEC_DEFAULT_NEGOTIATION "REQUIRED" }}
 SEC_PASSWORD_FILE = {{ default .Env.SEC_PASSWORD_FILE "/etc/condor/password" }}
 
 # Daemon and Domain Settings
-UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}               # UID domain setting
-DAEMON_LIST = MASTER, STARTD                                      # List of active daemons
-DISCARD_SESSION_KEYRING_ON_STARTUP = False                        # Session keyring handling
+UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}
+DAEMON_LIST = MASTER, STARTD
+DISCARD_SESSION_KEYRING_ON_STARTUP = False
 
-# Node Health and Job Management
-NODE_IS_HEALTHY = False                                           # Node health status, see health_check.py
-START = (NODE_IS_HEALTHY =?= True)                                # Expression Conditions to start jobs
-SUSPEND = False                                                   #
-PREEMPT = False                                                   #
-KILL = False                                                      #
-MAXJOBRETIREMENTTIME = 43200                                      # Max time (in seconds) to retire jobs # Set 12 hours maximum wait time for jobs to finish for using condor_drain
+## Node Health and Job Management
+NODE_IS_HEALTHY = False
+# Expression Conditions to start jobs
+START = (NODE_IS_HEALTHY =?= True)
+SUSPEND = False
+PREEMPT = False
+KILL = False
+# Max time (in seconds) to retire jobs # Set 12 hours maximum wait time for jobs to finish for using condor_drain
+MAXJOBRETIREMENTTIME = 43200
+CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }}
 
-# Dynamic Slots Configuration
+# Partitionable slot configuration
 NUM_SLOTS = 1
 NUM_SLOTS_TYPE_1 = 1
 SLOT_TYPE_1 = 100%
-SLOT_TYPE_1_PARTITIONABLE = TRUE                                  # Partitionable slot configuration
-
-CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }}
+SLOT_TYPE_1_PARTITIONABLE = True
 
 # Client Group Setting
 CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
 # Execution and Resource Management
 EXECUTE = {{ default .Env.condor_submit_workdir "/cdr/" }}{{ .Env.EXECUTE_SUFFIX }}
-STARTD_RECOMPUTE_DISK_FREE = true                                 # Recompute disk space
-STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)                       # Startd attributes
+STARTD_RECOMPUTE_DISK_FREE = True
+STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)
 
 # Miscellaneous Settings
-CREATE_CORE_FILES = false                                         # Core file creation policy
-AUTO_INCLUDE_SHARED_PORT_IN_DAEMON_LIST=False                     # Shared port daemon inclusion
+CREATE_CORE_FILES = False
+USE_SHARED_PORT = False
+AUTO_INCLUDE_SHARED_PORT_IN_DAEMON_LIST=False
 
 # Log File Management
 # Configuration for log file rotation and size management.
