@@ -14,7 +14,7 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 #Install Python3 and Libraries (source /root/miniconda/bin/activate)
 RUN yum install -y bzip2 \
 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
-&& bash ~/miniconda.sh -b -p /miniconda \
+&& bash ~/miniconda.sh -b -p /miniconda
 
 
 ENV PATH="/miniconda/bin:${PATH}"
