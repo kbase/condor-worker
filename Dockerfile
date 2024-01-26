@@ -36,9 +36,7 @@ RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/c
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
-COPY --chown=kbase deployment/ /kb/deployment/
 
-RUN /kb/deployment/bin/install_python_dependencies.sh
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
 # the end
@@ -49,11 +47,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       us.kbase.vcs-branch=$BRANCH \
       maintainer="Steve Chan sychan@lbl.gov"
 
-ENTRYPOINT [ "/usr/bin/docker-init" ]
-
-CMD ["/kb/deployment/bin/docker-init.sh"]
-
-WORKDIR /kb/deployment/jettybase
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
@@ -66,3 +59,11 @@ RUN chmod +x /tini && cp /tini /usr/bin/docker-init
 # Revisit this when we change dockerize and token auth
 RUN rm -f /etc/condor/config.d/00-htcondor-9.0.config
 RUN rm -f /etc/condor/config.d/01-*
+
+
+COPY --chown=kbase deployment/ /kb/deployment/
+RUN /kb/deployment/bin/install_python_dependencies.sh
+
+ENTRYPOINT [ "/usr/bin/docker-init" ]
+CMD ["/kb/deployment/bin/docker-init.sh"]
+WORKDIR /kb/deployment/jettybase
