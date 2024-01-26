@@ -1,0 +1,71 @@
+##  What machine is your central manager?
+CONDOR_HOST = {{ default .Env.CONDOR_HOST "condor" }}
+SCHEDD_HOST = {{ default .Env.SCHEDD_HOST "kbase@condor" }}
+CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}
+PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}
+
+## Allow commands to execute from this machine
+ALLOW_WRITE = $(ALLOW_WRITE) *.$(UID_DOMAIN) $(HOSTNAME)
+ALLOW_ADMINISTRATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
+ALLOW_NEGOTIATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
+
+# Set COLLECTOR_HOST if collector's internal hostname doesn't match DNS name
+# and also set sock=COLLECTOR if using shared port
+# example:
+# COLLECTOR_HOST = ci.kbase.us:9618?sock=collector
+{{ if .Env.COLLECTOR_HOST -}} COLLECTOR_HOST = {{ .Env.COLLECTOR_HOST }} {{- end }}
+
+# If the environment variable USE_TCP is set to true, the template will enable
+# this group of directives that convert communications to TCP
+# per https://lists.cs.wisc.edu/archive/htcondor-users/2011-August/msg00085.shtml
+# UPDATE_COLLECTOR_WITH_TCP = True
+# WANT_UDP_COMMAND_SOCKET = False
+# COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
+{{ if .Env.USE_TCP -}}
+UPDATE_COLLECTOR_WITH_TCP = True
+UPDATE_VIEW_COLLECTOR_WITH_TCP = True
+WANT_UDP_COMMAND_SOCKET = False
+COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
+{{- end }}
+
+SEC_DEFAULT_AUTHENTICATION = {{ default .Env.SEC_DEFAULT_AUTHENTICATION "PASSWORD" }}
+SEC_DEFAULT_AUTHENTICATION_METHODS = {{ default .Env.SEC_AUTHENTICATION_METHODS "PASSWORD" }} 
+SEC_DEFAULT_NEGOTIATION = {{ default .Env.SEC_DEFAULT_NEGOTIATION "REQUIRED" }} 
+SEC_PASSWORD_FILE = {{ default .Env.SEC_PASSWORD_FILE "/etc/condor/password" }}
+
+UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}
+DAEMON_LIST = MASTER, STARTD
+DISCARD_SESSION_KEYRING_ON_STARTUP = False
+
+NODE_IS_HEALTHY = False
+START = (NODE_IS_HEALTHY =?= True) 
+SUSPEND = False
+PREEMPT = False
+KILL = False
+
+# Set 12 hours maximum wait time for jobs to finish for using condor_drain
+MAXJOBRETIREMENTTIME = 43200
+
+
+# Dynamic Slots
+NUM_SLOTS = 1
+NUM_SLOTS_TYPE_1 = 1
+SLOT_TYPE_1 = 100%
+SLOT_TYPE_1_PARTITIONABLE = TRUE
+CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }}
+ 
+CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
+
+
+EXECUTE = {{ default .Env.condor_submit_workdir "/cdr/" }}{{ .Env.EXECUTE_SUFFIX }}
+
+STARTD_RECOMPUTE_DISK_FREE = true 
+STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)
+
+# We don't need core files, but can enable them for persistent crashes
+CREATE_CORE_FILES = false
+AUTO_INCLUDE_SHARED_PORT_IN_DAEMON_LIST=False
+
+# $(MAX_DEFAULT_LOG) is set to 10MB, before it is moved to .old. The .old gets over-written after 1 rotation
+# That means for 32 cores + 5 daemons, the max size = 37procs * 10mb = 370 * 2 = 740MB 
+

@@ -3,6 +3,8 @@
 * Modify Cronjobs that look for runaway containers
 * Update Documentation
 * Deprecate container_reaper_ee2.py in favor of container_reaper.py
+* Remove un-needed configs
+
 
 1.0.10
 ========

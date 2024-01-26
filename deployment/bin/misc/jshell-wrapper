@@ -1,7 +1,0 @@
-TMP=`mktemp`
-tail -n +2 $@ >> $TMP
-echo "/exit" >> $TMP
-$JAVA_HOME/bin/jshell -q --execution local $TMP
-rm $TMP
-
-#put this file in /usr/local/bin/ or somewhere in your $PATH

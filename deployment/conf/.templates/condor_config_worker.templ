@@ -1,20 +1,22 @@
-##  What machine is your central manager?
-CONDOR_HOST = {{ default .Env.CONDOR_HOST "condor" }}
-SCHEDD_HOST = {{ default .Env.SCHEDD_HOST "kbase@condor" }}
-CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}
-PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}
+# Central Manager Configuration
+CONDOR_HOST = {{ default .Env.CONDOR_HOST "condor" }}             # Hostname of the central manager
+SCHEDD_HOST = {{ default .Env.SCHEDD_HOST "kbase@condor" }}       # Hostname of the schedd (scheduler)
+CCB_ADDRESS = {{ default .Env.CCB_ADDRESS "condor" }}             # Address for CCB (Connection Brokering)
+PRIVATE_NETWORK_NAME = {{ default .Env.HOSTNAME "condor" }}       # Name of the private network
 
-## Allow commands to execute from this machine
-ALLOW_WRITE = $(ALLOW_WRITE) *.$(UID_DOMAIN) $(HOSTNAME)
-ALLOW_ADMINISTRATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
-ALLOW_NEGOTIATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
+# Access Control
+# Allow commands to execute from this machine
+ALLOW_WRITE = $(ALLOW_WRITE) *.$(UID_DOMAIN) $(HOSTNAME)          # Machines allowed to write
+ALLOW_ADMINISTRATOR = *.$(UID_DOMAIN) $(HOSTNAME)                 # Machines with admin privileges
+ALLOW_NEGOTIATOR = *.$(UID_DOMAIN) $(HOSTNAME)                    # Machines allowed to negotiate
 
-# Set COLLECTOR_HOST if collector's internal hostname doesn't match DNS name
-# and also set sock=COLLECTOR if using shared port
-# example:
+# Collector Configuration
+# Set COLLECTOR_HOST to match the internal hostname, if different from DNS name.
+# Use 'sock=collector' for shared port configuration if using shared port
 # COLLECTOR_HOST = ci.kbase.us:9618?sock=collector
 {{ if .Env.COLLECTOR_HOST -}} COLLECTOR_HOST = {{ .Env.COLLECTOR_HOST }} {{- end }}
 
+# TCP Communication (optional)
 # If the environment variable USE_TCP is set to true, the template will enable
 # this group of directives that convert communications to TCP
 # per https://lists.cs.wisc.edu/archive/htcondor-users/2011-August/msg00085.shtml
@@ -22,66 +24,54 @@ ALLOW_NEGOTIATOR =  *.$(UID_DOMAIN) $(HOSTNAME)
 # WANT_UDP_COMMAND_SOCKET = False
 # COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
 {{ if .Env.USE_TCP -}}
-UPDATE_COLLECTOR_WITH_TCP = True
-UPDATE_VIEW_COLLECTOR_WITH_TCP = True
-WANT_UDP_COMMAND_SOCKET = False
-COLLECTOR_MAX_FILE_DESCRIPTORS = 3000
+UPDATE_COLLECTOR_WITH_TCP = True                                  # Use TCP for collector updates
+UPDATE_VIEW_COLLECTOR_WITH_TCP = True                             # Use TCP for collector view updates
+WANT_UDP_COMMAND_SOCKET = False                                   # Disable UDP command socket
+COLLECTOR_MAX_FILE_DESCRIPTORS = 3000                             # Max file descriptors for collector
 {{- end }}
 
+# Security Settings
 SEC_DEFAULT_AUTHENTICATION = {{ default .Env.SEC_DEFAULT_AUTHENTICATION "PASSWORD" }}
-SEC_DEFAULT_AUTHENTICATION_METHODS = {{ default .Env.SEC_AUTHENTICATION_METHODS "PASSWORD" }} 
-SEC_DEFAULT_NEGOTIATION = {{ default .Env.SEC_DEFAULT_NEGOTIATION "REQUIRED" }} 
+SEC_DEFAULT_AUTHENTICATION_METHODS = {{ default .Env.SEC_AUTHENTICATION_METHODS "PASSWORD" }}
+SEC_DEFAULT_NEGOTIATION = {{ default .Env.SEC_DEFAULT_NEGOTIATION "REQUIRED" }}
 SEC_PASSWORD_FILE = {{ default .Env.SEC_PASSWORD_FILE "/etc/condor/password" }}
 
-UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}
-DAEMON_LIST = MASTER, STARTD
-DISCARD_SESSION_KEYRING_ON_STARTUP = False
+# Daemon and Domain Settings
+UID_DOMAIN = {{ default .Env.UID_DOMAIN "condor" }}               # UID domain setting
+DAEMON_LIST = MASTER, STARTD                                      # List of active daemons
+DISCARD_SESSION_KEYRING_ON_STARTUP = False                        # Session keyring handling
 
+# Node Health and Job Management
+NODE_IS_HEALTHY = False                                           # Node health status, see health_check.py
+START = (NODE_IS_HEALTHY =?= True)                                # Expression Conditions to start jobs
+SUSPEND = False                                                   #
+PREEMPT = False                                                   #
+KILL = False                                                      #
+MAXJOBRETIREMENTTIME = 43200                                      # Max time (in seconds) to retire jobs # Set 12 hours maximum wait time for jobs to finish for using condor_drain
 
-
-
-# When is this node willing to run jobs?
-#StartJobs = True
-#NODE_IS_HEALTHY = False
-#START = (NODE_IS_HEALTHY =?= True) && (StartJobs =?= True)
-
-NODE_IS_HEALTHY = False
-START = (NODE_IS_HEALTHY =?= True) 
-
-# Check this with condor_config_val START -evaluate
-
-
-#START = TRUE
-SUSPEND = False
-PREEMPT = False
-KILL = False
-
-# Set 12 hours maximum wait time for jobs to finish for using condor_drain
-MAXJOBRETIREMENTTIME = 43200
-
-# Machine resource settings
-# {{ if .Env.NUM_SLOTS -}} NUM_SLOTS = {{ .Env.NUM_SLOTS }} {{- end }}
-
-# Dynamic Slots
+# Dynamic Slots Configuration
 NUM_SLOTS = 1
 NUM_SLOTS_TYPE_1 = 1
 SLOT_TYPE_1 = 100%
-SLOT_TYPE_1_PARTITIONABLE = TRUE
+SLOT_TYPE_1_PARTITIONABLE = TRUE                                  # Partitionable slot configuration
+
 CGROUP_MEMORY_LIMIT_POLICY = {{ default .Env.CGROUP_MEMORY_LIMIT_POLICY "soft" }}
- 
+
+# Client Group Setting
 CLIENTGROUP = {{ default .Env.CLIENTGROUP "\"njs\"" }}
 
-#LEGACY : /mnt/awe/condor/condor_job_execute/$(HOSTNAME)/ to
-
-
+# Execution and Resource Management
 EXECUTE = {{ default .Env.condor_submit_workdir "/cdr/" }}{{ .Env.EXECUTE_SUFFIX }}
+STARTD_RECOMPUTE_DISK_FREE = true                                 # Recompute disk space
+STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)                       # Startd attributes
 
-STARTD_RECOMPUTE_DISK_FREE = true 
-#STARTD_ATTRS = StartJobs, CLIENTGROUP, $(STARTD_ATTRS)
-STARTD_ATTRS = CLIENTGROUP, $(STARTD_ATTRS)
+# Miscellaneous Settings
+CREATE_CORE_FILES = false                                         # Core file creation policy
+AUTO_INCLUDE_SHARED_PORT_IN_DAEMON_LIST=False                     # Shared port daemon inclusion
 
-# We don't need core files, but can enable them for persistent crashes
-CREATE_CORE_FILES = false
-
+# Log File Management
+# Configuration for log file rotation and size management.
+# Max log size is calculated based on the number of cores and daemons.
 # $(MAX_DEFAULT_LOG) is set to 10MB, before it is moved to .old. The .old gets over-written after 1 rotation
-# That means for 32 cores + 5 daemons, the max size = 37procs * 10mb = 370 * 2 = 740MB 
+# That means for 32 cores + 5 daemons, the max size = 37procs * 10mb = 370 * 2 = 740MB
+
