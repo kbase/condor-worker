@@ -1,7 +1,7 @@
 FROM htcondor/execute:lts-el8
 ENV container docker
 
-# Ge$t commonly used utilities
+# Get commonly used utilities
 RUN yum -y update && yum upgrade -y 
 RUN yum install -y drpm
 RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch procps
@@ -52,13 +52,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       maintainer="Steve Chan sychan@lbl.gov"
 
 ENTRYPOINT [ "/kb/deployment/bin/dockerize" ]
-CMD [ "-template", "/kb/deployment/conf/.templates/deployment.cfg.templ:/kb/deployment/conf/deployment.cfg", \
-      "-template", "/kb/deployment/conf/.templates/http.ini.templ:/kb/deployment/jettybase/start.d/http.ini", \
-      "-template", "/kb/deployment/conf/.templates/server.ini.templ:/kb/deployment/jettybase/start.d/server.ini", \
-      "-template", "/kb/deployment/conf/.templates/start_server.sh.templ:/kb/deployment/bin/start_server.sh", \
-      "-template", "/kb/deployment/conf/.templates/condor_config.templ:/etc/condor/condor_config.local", \
-      "-stdout", "/kb/deployment/jettybase/logs/request.log", \
-      "/kb/deployment/bin/start_server.sh" ]
 
 WORKDIR /kb/deployment/jettybase
 
@@ -68,3 +61,8 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /
 RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 \
  && gpg --batch --verify /tini.asc /tini
 RUN chmod +x /tini && cp /tini /usr/bin/docker-init
+
+# Delete un-needed-configs from htcondor/execute:lts-el8
+# Revisit this when we change dockerize and token auth
+RUN rm -f /etc/condor/config.d/00-htcondor-9.0.config
+RUN rm -f /etc/condor/config.d/01-*

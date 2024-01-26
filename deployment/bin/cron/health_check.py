@@ -4,6 +4,7 @@ This script is to be run by the condor cronjob periodically in order to test if 
 
 """
 import datetime
+import inspect
 import json
 import logging
 import os
@@ -33,11 +34,10 @@ webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
 if webhook_url is None:
     exit("SLACK_WEBHOOK_URL is not defined")
 
-
-
 user = "nobody"
 pid = pwd.getpwnam(user).pw_uid
 gid = pwd.getpwnam(user).pw_gid
+
 
 def send_slack_message(message: str):
     """
@@ -61,8 +61,13 @@ def exit_unsuccessfully(message: str, send_to_slack=True):
     now = datetime.datetime.now()
 
     if send_to_slack:
+        try:
+            function_name = lambda: inspect.stack()[1][3]
+        except Exception:
+            function_name = ""
+
         send_slack_message(
-            f"POSSIBLE BLACK HOLE: Ran healthcheck at {now} on {socket.gethostname()} with failure: {message}"
+            f"POSSIBLE BLACK HOLE: {function_name} Ran healthcheck at {now} on {socket.gethostname()} with failure: {message}"
         )
 
     sys.exit(1)
@@ -223,8 +228,6 @@ def check_kbase_endpoints():
         except Exception as e:
             message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
-
-        
 
 
 def main():
