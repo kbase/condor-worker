@@ -66,4 +66,4 @@ RUN /kb/deployment/bin/install_python_dependencies.sh
 
 ENTRYPOINT [ "/usr/bin/docker-init" ]
 CMD ["/kb/deployment/bin/docker-init.sh"]
-WORKDIR /kb/deployment/jettybase
+WORKDIR /kb/deployment
