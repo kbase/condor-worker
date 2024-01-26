@@ -3,6 +3,7 @@
 * Modify Cronjobs that look for runaway containers
 * Update Documentation
 * Deprecate container_reaper_ee2.py in favor of container_reaper.py
+* Update htcondor image to add TINI back in until we use supervisor.d 
 
 1.0.10
 ========
