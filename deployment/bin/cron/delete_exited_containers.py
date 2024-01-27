@@ -26,7 +26,12 @@ if __name__ == "__main__":
     hostname = socket.gethostname()
     dc = docker.from_env()
     ec = dc.containers.list(filters={"status": "exited"})
-    container_image_names = [c.attrs["Config"]["Image"] for c in ec]
-    if container_image_names:
-        dc.containers.prune()
-        send_slack_message(f"Deleted {len(ec)} `exited` containers on {hostname} {container_image_names}")
+    kbase_containers = [c for c in ec if "kbase" in c.attrs["Config"]["Image"]]
+    container_image_names = [c.attrs["Config"]["Image"] for c in kbase_containers]
+    if kbase_containers:
+        for container in kbase_containers:
+            container.remove()
+        debug_mode = os.environ.get("DEBUG", "false").lower() == "true"
+        if debug_mode:
+            send_slack_message(
+                f"Deleted {len(kbase_containers)} `exited` containers with 'kbase' in image name on {hostname}: {container_image_names}")

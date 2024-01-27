@@ -1,7 +1,7 @@
 FROM htcondor/execute:lts-el8
 ENV container docker
 
-# Ge$t commonly used utilities
+# Get commonly used utilities
 RUN yum -y update && yum upgrade -y 
 RUN yum install -y drpm
 RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch procps
@@ -14,7 +14,7 @@ RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-ma
 #Install Python3 and Libraries (source /root/miniconda/bin/activate)
 RUN yum install -y bzip2 \
 && wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
-&& bash ~/miniconda.sh -b -p /miniconda \
+&& bash ~/miniconda.sh -b -p /miniconda
 
 
 ENV PATH="/miniconda/bin:${PATH}"
@@ -22,8 +22,6 @@ ENV PATH="/miniconda/bin:${PATH}"
 # Add kbase user and set up directories
 RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
     mkdir -p /kb/deployment/bin && \
-    mkdir -p /kb/deployment/jettybase/logs/ && \
-    touch /kb/deployment/jettybase/logs/request.log && \
     chown -R kbase /kb/deployment
 
 #INSTALL DOCKERIZE
@@ -38,9 +36,7 @@ RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/c
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
-COPY --chown=kbase deployment/ /kb/deployment/
 
-RUN /kb/deployment/bin/install_python_dependencies.sh
 
 # The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
 # the end
@@ -51,16 +47,6 @@ LABEL org.label-schema.build-date=$BUILD_DATE \
       us.kbase.vcs-branch=$BRANCH \
       maintainer="Steve Chan sychan@lbl.gov"
 
-ENTRYPOINT [ "/kb/deployment/bin/dockerize" ]
-CMD [ "-template", "/kb/deployment/conf/.templates/deployment.cfg.templ:/kb/deployment/conf/deployment.cfg", \
-      "-template", "/kb/deployment/conf/.templates/http.ini.templ:/kb/deployment/jettybase/start.d/http.ini", \
-      "-template", "/kb/deployment/conf/.templates/server.ini.templ:/kb/deployment/jettybase/start.d/server.ini", \
-      "-template", "/kb/deployment/conf/.templates/start_server.sh.templ:/kb/deployment/bin/start_server.sh", \
-      "-template", "/kb/deployment/conf/.templates/condor_config.templ:/etc/condor/condor_config.local", \
-      "-stdout", "/kb/deployment/jettybase/logs/request.log", \
-      "/kb/deployment/bin/start_server.sh" ]
-
-WORKDIR /kb/deployment/jettybase
 
 ENV TINI_VERSION v0.19.0
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
@@ -68,3 +54,16 @@ ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini.asc /
 RUN gpg --batch --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 595E85A6B1B4779EA4DAAEC70B588DFF0527A9B7 \
  && gpg --batch --verify /tini.asc /tini
 RUN chmod +x /tini && cp /tini /usr/bin/docker-init
+
+# Delete un-needed-configs from htcondor/execute:lts-el8
+# Revisit this when we change dockerize and token auth
+RUN rm -f /etc/condor/config.d/00-htcondor-9.0.config
+RUN rm -f /etc/condor/config.d/01-*
+
+
+COPY --chown=kbase deployment/ /kb/deployment/
+RUN /kb/deployment/bin/install_python_dependencies.sh
+
+ENTRYPOINT [ "/usr/bin/docker-init" ]
+CMD ["/kb/deployment/bin/docker-init.sh"]
+WORKDIR /kb/deployment
