@@ -31,6 +31,7 @@ if __name__ == "__main__":
     if kbase_containers:
         for container in kbase_containers:
             container.remove()
-        if bool(os.environ.get('DEBUG', "False").lower()):
+        debug_mode = os.environ.get("DEBUG", "false").lower() == "true"
+        if debug_mode:
             send_slack_message(
-                f"Deleted {len(kbase_containers)} `exited` containers with 'kbase' in image name on {hostname} {container_image_names}")
+                f"Deleted {len(kbase_containers)} `exited` containers with 'kbase' in image name on {hostname}: {container_image_names}")
