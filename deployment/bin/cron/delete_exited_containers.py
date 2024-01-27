@@ -1,17 +1,18 @@
 #!/miniconda/bin/python
-import os
+# This script is automatically run by the condor cronjob periodically
+# in order to clean up exited docker containers.
 import json
-import requests
-import docker
+import os
 import socket
-import datetime
+
+import docker
+import requests
 
 
 def send_slack_message(message: str):
     """
     :param message: Escaped Message to send to slack
     """
-    # ee_notifications_channel
     webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
     slack_data = {"text": message}
     requests.post(
@@ -22,14 +23,15 @@ def send_slack_message(message: str):
 
 
 if __name__ == "__main__":
-    # send_slack_message(f"Job DELETE_EXITED is beginning at {datetime.datetime.now()}")
     hostname = socket.gethostname()
     dc = docker.from_env()
     ec = dc.containers.list(filters={"status": "exited"})
-    count = len(ec)
-
-    if count > 0:
-        dc.containers.prune()
-        send_slack_message(f"Deleted {count} stopped containers on {hostname}")
-
-    # send_slack_message(f"Job DELETE_EXITED is ENDING at {datetime.datetime.now()}")
+    kbase_containers = [c for c in ec if "kbase" in c.attrs["Config"]["Image"]]
+    container_image_names = [c.attrs["Config"]["Image"] for c in kbase_containers]
+    if kbase_containers:
+        for container in kbase_containers:
+            container.remove()
+        debug_mode = os.environ.get("DEBUG", "false").lower() == "true"
+        if debug_mode:
+            send_slack_message(
+                f"Deleted {len(kbase_containers)} `exited` containers with 'kbase' in image name on {hostname}: {container_image_names}")

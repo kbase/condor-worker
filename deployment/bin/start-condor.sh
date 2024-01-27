@@ -4,7 +4,7 @@
 # condor pool password
 
 if [ "$GROUPMOD_DOCKER" ] ; then
-    groupmod -g $GROUPMOD_DOCKER docker
+    groupmod -g "$GROUPMOD_DOCKER" docker
 fi
 
 if [ "$POOL_PASSWORD" ] ; then
@@ -42,11 +42,15 @@ fi
 
 # Ensure condor user can write to logs, since this is now mounted from host
 # Ensure condor user can modify the lock files and run files as of 8.9.10
-chown condor $(condor_config_val log) $(condor_config_val lock) $(condor_config_val run)
+chown condor "$(condor_config_val log)" "$(condor_config_val lock)" "$(condor_config_val run)"
 
 
 
 
 
 docker system prune -a -f
+
+# Required for htcondor docker image to pick up changes from configs
+/update-config
+
 exec "$(condor_config_val MASTER)" -f -t 2>&1
