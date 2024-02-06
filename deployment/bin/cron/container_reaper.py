@@ -8,7 +8,6 @@ Required env vars are
 # SLACK_WEBHOOK_URL - The slack webhook url to send messages to
 """
 
-import json
 import os
 import socket
 import subprocess
@@ -17,21 +16,9 @@ from datetime import datetime, timedelta
 from typing import Set
 
 import docker
-import requests
 from docker.models.containers import Container
 
-
-def send_slack_message(message: str):
-    """
-    :param message: Escaped Message to send to slack
-    """
-    webhook_url = os.environ.get("SLACK_WEBHOOK_URL", None)
-    slack_data = {"text": message}
-    requests.post(
-        webhook_url,
-        data=json.dumps(slack_data),
-        headers={"Content-Type": "application/json"},
-    )
+from .send_slack_message import notify_kbase_slack
 
 
 def filter_containers_by_time(potential_containers, days=0, minutes=0):
@@ -74,7 +61,7 @@ def reap_containers_running_more_than_7_days(potential_containers: Set[Container
     if old_containers:
         for old_container in old_containers:
             message = get_running_time_message(old_container, title="reaper7daylimit")
-            send_slack_message(message)
+            notify_kbase_slack(message)
             remove_with_backoff(old_container, message)
 
 
@@ -91,7 +78,7 @@ def reap_containers_when_there_is_no_starter(potential_containers: Set[Container
     if runaway_containers:
         for runaway_container in runaway_containers:
             message = get_running_time_message(runaway_container, title="reaper_no_starter")
-            send_slack_message(message)
+            notify_kbase_slack(message)
             remove_with_backoff(container,message)
 
 

@@ -5,7 +5,6 @@ This script is to be run by the condor cronjob periodically in order to test if 
 """
 import datetime
 import inspect
-import json
 import logging
 import os
 import pwd
@@ -17,6 +16,8 @@ import sys
 import docker
 import psutil
 import requests
+
+from .send_slack_message import notify_kbase_slack
 
 # Optional environment variables
 var_lib_docker = os.environ.get("DOCKER_CACHE", "/var/lib/docker/")
@@ -38,17 +39,7 @@ user = "nobody"
 pid = pwd.getpwnam(user).pw_uid
 gid = pwd.getpwnam(user).pw_gid
 
-
-def send_slack_message(message: str):
-    """
-    :param message: Escaped Message to send to slack
-    """
-    slack_data = {"text": message}
-    requests.post(
-        webhook_url,
-        data=json.dumps(slack_data),
-        headers={"Content-Type": "application/json"},
-    )
+LOCKFILE_PATH = "/tmp/lockfile"
 
 
 def exit_unsuccessfully(message: str, send_to_slack=True):
@@ -58,22 +49,29 @@ def exit_unsuccessfully(message: str, send_to_slack=True):
     print("NODE_IS_HEALTHY = False")
     print(f'HEALTH_STATUS_MESSAGE = "{message}"')
     print("- update:true")
-    now = datetime.datetime.now()
 
     if send_to_slack:
-        try:
-            function_name = lambda: inspect.stack()[1][3]
-        except Exception:
+        if not os.path.exists(LOCKFILE_PATH):
+            # Lock file doesn't exist, meaning it's a new failure
+            # Notify Slack and create the lockfile to prevent future notifications for NODE_IS_HEALTHY = False
+            with open(LOCKFILE_PATH, 'w') as lock_file:
+                lock_file.write(message)  # Optionally write the failure message into the lockfile
             function_name = ""
-
-        send_slack_message(
-            f"POSSIBLE BLACK HOLE: {function_name} Ran healthcheck at {now} on {socket.gethostname()} with failure: {message}"
-        )
-
+            try:
+                function_name = inspect.stack()[1][3]
+            except Exception:
+                pass
+            notify_kbase_slack(
+                f"POSSIBLE BLACK HOLE: {function_name} on {socket.gethostname()} with failure: {message}"
+            )
+        # If the lock file exists, don't message slack, but continue the sys.exit(1)
     sys.exit(1)
 
 
 def exit_successfully():
+    if os.path.exists(LOCKFILE_PATH):
+        os.remove(LOCKFILE_PATH)  # Delete the lock file if it exists
+
     print("NODE_IS_HEALTHY = True")
     print(f'HEALTH_STATUS_MESSAGE = "Healthy {datetime.datetime.now()}"')
     print("- update:true")
@@ -197,7 +195,7 @@ def test_enough_space(mount_point, nickname, percentage):
 
 def check_kbase_endpoints():
     """
-    Check auth/njs/catalog/ws
+    Check Auth, Catalog, and Workspace status
     """
 
     post_services = {
@@ -232,7 +230,6 @@ def check_kbase_endpoints():
 
 def main():
     try:
-        # send_slack_message(f"Job HEALTH_CHECK is beginning at {datetime.datetime.now()}")
         test_docker_socket()
         test_docker_socket2()
         test_scratch_world_writeable()
