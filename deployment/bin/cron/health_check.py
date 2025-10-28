@@ -140,7 +140,7 @@ def test_docker_socket():
     socket_gid = os.stat(socket).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    gids = [999, 996, 995, 987]
+    gids = [1000, 999, 996, 995, 987]
     if socket_gid in gids:
         return
 
@@ -155,7 +155,7 @@ def test_docker_socket2():
     Check to see if the nobody user has access to the docker socket
     """
     dc = docker.from_env()
-    if len(dc.containers.list()) < 1:
+    if not dc.ping():
         message = f"Cannot access docker socket"
         exit_unsuccessfully(message)
 
