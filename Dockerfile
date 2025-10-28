@@ -35,7 +35,7 @@ ARG BRANCH=develop
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
-ENV PATH /miniconda/bin:$PATH
+ENV PATH=/miniconda/bin:$PATH
 
 
 RUN pip install requests sanic==21.12.2 docker==7.0.0
@@ -45,7 +45,7 @@ COPY --chown=kbase deployment/ /kb/deployment/
 
 RUN /kb/deployment/bin/install_python_dependencies.sh
 
-ENV KB_DEPLOYMENT_CONFIG /kb/deployment/conf/deployment.cfg
+ENV KB_DEPLOYMENT_CONFIG=/kb/deployment/conf/deployment.cfg
 
 
 ENTRYPOINT [ "/kb/deployment/bin/dockerize" ]
