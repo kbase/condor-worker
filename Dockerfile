@@ -12,7 +12,7 @@ RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -
 && export PATH="/miniconda/bin:$PATH"
 
 # Add kbase user and set up directories
-RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
+RUN useradd -c "KBase user" -rd /kb/deployment/ -u 1000 -s /bin/bash kbase && \
     mkdir -p /kb/deployment/bin && \
     mkdir -p /kb/deployment/jettybase/logs/ && \
     touch /kb/deployment/jettybase/logs/request.log && \
@@ -21,8 +21,7 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
 #INSTALL DOCKERIZE
 RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
 
-# Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
-RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
+
 
 
 #ADD DIRS
@@ -39,7 +38,8 @@ RUN rm -rf /var/cache/yum
 ENV PATH /miniconda/bin:$PATH
 
 
-RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
+RUN pip install requests sanic==21.12.2 docker==7.0.0
+
 
 COPY --chown=kbase deployment/ /kb/deployment/
 
