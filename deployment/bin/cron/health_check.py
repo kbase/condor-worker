@@ -154,10 +154,13 @@ def test_docker_socket2():
     """
     Check to see if the nobody user has access to the docker socket
     """
-    dc = docker.from_env()
-    if not dc.ping():
+    try:
+        dc = docker.DockerClient(base_url='unix:///var/run/docker.sock')
+        dc.ping()
+    except Exception:
         message = f"Cannot access docker socket"
         exit_unsuccessfully(message)
+
 
 
 def test_world_writeable():

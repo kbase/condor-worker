@@ -38,7 +38,7 @@ RUN rm -rf /var/cache/yum
 ENV PATH=/miniconda/bin:$PATH
 
 
-RUN pip install requests sanic==21.12.2 docker==7.0.0
+RUN pip install requests sanic==21.12.2 docker==7.1.0
 
 
 COPY --chown=kbase deployment/ /kb/deployment/
