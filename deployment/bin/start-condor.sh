@@ -14,9 +14,10 @@ if [ "$POOL_PASSWORD" ] ; then
 fi
 
 if [ "$SET_NOBODY_USER_GUID" ] ; then
+    # For file permissions
     usermod -a -G "$SET_NOBODY_USER_GUID" nobody
     usermod -a -G "$SET_NOBODY_USER_GUID" condor
-# For backwards compatibility for directories already created by the kbase user
+    # For backwards compatibility for directories already created by the kbase user
     usermod -a -G "kbase" nobody
     usermod -a -G "docker" nobody
 fi
