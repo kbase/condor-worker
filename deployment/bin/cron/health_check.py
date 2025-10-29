@@ -159,8 +159,12 @@ def test_docker_socket2():
     try:
         dc = docker.DockerClient(base_url='unix:///var/run/docker.sock')
         dc.ping()
-    except Exception:
-        message = f"Cannot access docker socket"
+    except Exception as e :
+        whoami = subprocess.check_output("whoami", shell=True).decode().strip()
+        my_groups = subprocess.check_output("groups", shell=True).decode().strip()
+        ggid = os.getgid()
+        uid = os.getuid()
+        message = f"Cannot access docker socket {e} user={whoami} groups={my_groups} uid={uid} gid={ggid}"
         exit_unsuccessfully(message)
 
 
