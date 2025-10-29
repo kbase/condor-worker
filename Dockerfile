@@ -18,6 +18,8 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 1000 -s /bin/bash kbase && \
     touch /kb/deployment/jettybase/logs/request.log && \
     chown -R kbase /kb/deployment
 
+RUN usermod -aG docker kbase
+
 #INSTALL DOCKERIZE
 RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
 

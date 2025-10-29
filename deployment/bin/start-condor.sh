@@ -4,7 +4,7 @@
 # condor pool password
 
 if [ "$GROUPMOD_DOCKER" ] ; then
-    groupmod -g $GROUPMOD_DOCKER docker
+    groupmod -o -g $GROUPMOD_DOCKER docker
 fi
 
 if [ "$POOL_PASSWORD" ] ; then
@@ -16,6 +16,7 @@ if [ "$SET_NOBODY_USER_GUID" ] ; then
     usermod -a -G "$SET_NOBODY_USER_GUID" condor
 # For backwards compatibility for directories already created by the kbase user
     usermod -a -G "kbase" nobody
+    usermod -a -G "docker" nobody
 fi
 
 if [ "$SET_NOBODY_USER_UID" ] ; then
