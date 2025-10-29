@@ -6,6 +6,7 @@
 if [ "$GROUPMOD_DOCKER" ] ; then
     groupmod -o -g $GROUPMOD_DOCKER docker
     usermod -aG docker kbase
+    usermod -aG docker condor
 fi
 
 if [ "$POOL_PASSWORD" ] ; then
