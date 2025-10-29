@@ -5,8 +5,8 @@
 
 if [ "$GROUPMOD_DOCKER" ] ; then
     groupmod -o -g $GROUPMOD_DOCKER docker
-    usermod -aG docker kbase
-    usermod -aG docker condor
+    usermod -aG docker kbase # for jobs running as kbase user/nobody user
+    usermod -aG docker condor # for condor cronjobs
 fi
 
 if [ "$POOL_PASSWORD" ] ; then
