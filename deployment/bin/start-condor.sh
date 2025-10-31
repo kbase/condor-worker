@@ -35,6 +35,7 @@ if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
     chmod 01777 "$CONDOR_SUBMIT_WORKDIR/logs"
     chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}/logs"
     chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}/../logs"
+    chown condor $CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}
 else
     mkdir -p "/cdr/${EXECUTE_SUFFIX}"
     chmod 01777 "/cdr/${EXECUTE_SUFFIX}"
