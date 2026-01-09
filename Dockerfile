@@ -1,23 +1,18 @@
-FROM htcondor/execute:lts-el8
-ENV container docker
+FROM htcondor/base:25.0.1-el9
 
-# Ge$t commonly used utilities
-RUN yum -y update && yum upgrade -y 
-RUN yum install -y drpm
-RUN yum -y install -y epel-release wget which git gcc libcgroup libcgroup-tools stress-ng tmpwatch
+# Get commonly used utilities
+RUN yum -y update && yum update -y systemd && yum -y install -y epel-release wget which git gcc stress-ng tmpwatch bzip2
 
 # Install docker binaries 
 RUN yum install -y yum-utils device-mapper-persistent-data lvm2 && yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo && yum install -y docker-ce
 
 
-#Install Python3 and Libraries (source /root/miniconda/bin/activate)
-RUN yum install -y bzip2 \
-&& wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
+RUN wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O ~/miniconda.sh \
 && bash ~/miniconda.sh -b -p /miniconda \
 && export PATH="/miniconda/bin:$PATH"
 
 # Add kbase user and set up directories
-RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
+RUN useradd -c "KBase user" -rd /kb/deployment/ -u 1000 -s /bin/bash kbase && \
     mkdir -p /kb/deployment/bin && \
     mkdir -p /kb/deployment/jettybase/logs/ && \
     touch /kb/deployment/jettybase/logs/request.log && \
@@ -26,8 +21,8 @@ RUN useradd -c "KBase user" -rd /kb/deployment/ -u 998 -s /bin/bash kbase && \
 #INSTALL DOCKERIZE
 RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-v0.6.1.tar.gz && tar xvzf dockerize-linux-amd64-v0.6.1.tar.gz && cp dockerize /kb/deployment/bin && rm dockerize*
 
-# Also add the user to the groups that map to "docker" on Linux and "daemon" on Mac
-RUN usermod -a -G 0 kbase && usermod -a -G 999 kbase
+
+
 
 #ADD DIRS
 RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
@@ -35,21 +30,17 @@ RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/c
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 
+ENV PATH=/miniconda/bin:$PATH
+
+
+RUN pip install uv requests websockets==10.0 slackclient psutil sanic==21.12.2 docker==7.1.0 
+
+
 COPY --chown=kbase deployment/ /kb/deployment/
 
-# Install dependencies for JobRunner
-ENV PATH /miniconda/bin:$PATH
-RUN wget https://raw.githubusercontent.com/kbase/JobRunner/master/requirements.txt && pip install -r requirements.txt && rm requirements.txt
-RUN /kb/deployment/bin/install_python_dependencies.sh
 
-# The BUILD_DATE value seem to bust the docker cache when the timestamp changes, move to
-# the end
-LABEL org.label-schema.build-date=$BUILD_DATE \
-      org.label-schema.vcs-url="https://github.com/kbase/condor-worker.git" \
-      org.label-schema.vcs-ref=$VCS_REF \
-      org.label-schema.schema-version="1.0.0" \
-      us.kbase.vcs-branch=$BRANCH \
-      maintainer="Steve Chan sychan@lbl.gov"
+ENV KB_DEPLOYMENT_CONFIG=/kb/deployment/conf/deployment.cfg
+
 
 ENTRYPOINT [ "/kb/deployment/bin/dockerize" ]
 CMD [ "-template", "/kb/deployment/conf/.templates/deployment.cfg.templ:/kb/deployment/conf/deployment.cfg", \

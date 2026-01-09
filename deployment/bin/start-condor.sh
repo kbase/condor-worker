@@ -4,7 +4,9 @@
 # condor pool password
 
 if [ "$GROUPMOD_DOCKER" ] ; then
-    groupmod -g $GROUPMOD_DOCKER docker
+    groupmod -o -g $GROUPMOD_DOCKER docker
+    usermod -aG docker kbase # for jobs running as kbase user/nobody user
+    usermod -aG docker condor # for condor cronjobs
 fi
 
 if [ "$POOL_PASSWORD" ] ; then
@@ -14,10 +16,12 @@ if [ "$POOL_PASSWORD" ] ; then
 fi
 
 if [ "$SET_NOBODY_USER_GUID" ] ; then
+    # For file permissions
     usermod -a -G "$SET_NOBODY_USER_GUID" nobody
     usermod -a -G "$SET_NOBODY_USER_GUID" condor
-# For backwards compatibility for directories already created by the kbase user
+    # For backwards compatibility for directories already created by the kbase user
     usermod -a -G "kbase" nobody
+    usermod -a -G "docker" nobody
 fi
 
 if [ "$SET_NOBODY_USER_UID" ] ; then
@@ -33,6 +37,7 @@ if [ "$CONDOR_SUBMIT_WORKDIR" ] ; then
     chmod 01777 "$CONDOR_SUBMIT_WORKDIR/logs"
     chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}/logs"
     chmod 01777 "$CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}/../logs"
+    chown condor $CONDOR_SUBMIT_WORKDIR/${EXECUTE_SUFFIX}
 else
     mkdir -p "/cdr/${EXECUTE_SUFFIX}"
     chmod 01777 "/cdr/${EXECUTE_SUFFIX}"

@@ -33,8 +33,10 @@ def send_slack_message(message: str):
 
 
 debug = False
-scratch = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
-scratch += os.environ.get("EXECUTE_SUFFIX", "")
+workdir = os.environ.get("CONDOR_SUBMIT_WORKDIR", "/cdr")
+suffix = os.environ.get("EXECUTE_SUFFIX", "")
+scratch = f"{workdir}/{suffix}"
+
 check_condor_starter_health = (
     os.environ.get("CHECK_CONDOR_STARTER_HEALTH", "true").lower() == "true"
 )
@@ -140,7 +142,7 @@ def test_docker_socket():
     socket_gid = os.stat(socket).st_gid
 
     # TODO FIX THIS TEST.. GROUPS ARE NOT BEING CORRECTLY SET INSIDE THE DOCKER CONTAINER
-    gids = [999, 996, 995, 987]
+    gids = [1000, 999, 996, 995, 987]
     if socket_gid in gids:
         return
 
@@ -154,10 +156,17 @@ def test_docker_socket2():
     """
     Check to see if the nobody user has access to the docker socket
     """
-    dc = docker.from_env()
-    if len(dc.containers.list()) < 1:
-        message = f"Cannot access docker socket"
+    try:
+        dc = docker.DockerClient(base_url='unix:///var/run/docker.sock')
+        dc.ping()
+    except Exception as e :
+        whoami = subprocess.check_output("whoami", shell=True).decode().strip()
+        my_groups = subprocess.check_output("groups", shell=True).decode().strip()
+        ggid = os.getgid()
+        uid = os.getuid()
+        message = f"Cannot access docker socket {e} user={whoami} groups={my_groups} uid={uid} gid={ggid}"
         exit_unsuccessfully(message)
+
 
 
 def test_world_writeable():
@@ -233,6 +242,7 @@ def checkEndpoints():
             exit_unsuccessfully(message)
 
         
+
 
 
 def main():

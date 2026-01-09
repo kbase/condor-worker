@@ -1,11 +1,17 @@
 ---
 name: Manual Build & Push
 on:
- workflow_dispatch:
+  workflow_dispatch:
+    inputs:
+      platforms:
+        description: 'The platforms for which the Docker image should be built. If not specified, defaults to linux/amd64.'
+        required: false
+        default: 'linux/amd64'
 jobs:
   build-push:
     uses: kbase/.github/.github/workflows/reusable_build-push.yml@main
     with:
       name: '${{ github.event.repository.name }}-develop'
       tags: br-${{ github.ref_name }}
+      platforms: ${{ github.event.inputs.platforms }}
     secrets: inherit
