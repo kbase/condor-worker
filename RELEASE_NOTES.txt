@@ -1,3 +1,42 @@
+1.0.10
+========
+*  Fix health check
+*  Fix dependencies for JobRunner
+*  Pin versions due for Python
+*  Update base image to `htcondor/execute:lts-el8`
+
+
+1.0.9
+=======
+* Add GHA Actions
+* Move from quay to GHCR.io
+* New Base Image from  HTCondor Dockerhub
+* Update security policies for HTCondor Version 9 Series
+
+1.0.8.4
+=======
+* Move from dockerhub to quay
+* Add health check script
+* Update condor logs perms
+* Disable core files
+* Update permissions for condor daemon
+
+
+1.0.8.3
+=======
+* Removed NJS from cronjobs
+
+
+1.0.8.2
+=======
+* ?
+
+1.0.8.1
+=======
+* ?
+
+
+
 1.0.8
 ======
 * Removed support for njs jobs

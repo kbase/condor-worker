@@ -11,6 +11,8 @@ fi
 
 if [ "$POOL_PASSWORD" ] ; then
     /usr/sbin/condor_store_cred -p "$POOL_PASSWORD" -f "$(condor_config_val SEC_PASSWORD_FILE)"
+    condor_store_cred -p "$POOL_PASSWORD" -c add
+    umask 0077; condor_token_create -identity condor@mypool > /etc/condor/tokens.d/condor@mypool
 fi
 
 if [ "$SET_NOBODY_USER_GUID" ] ; then
@@ -42,6 +44,14 @@ else
     chmod 01777 "/cdr/${EXECUTE_SUFFIX}/logs"
     chmod 01777 "/cdr/${EXECUTE_SUFFIX}/../logs"
 fi
+
+# Ensure condor user can write to logs, since this is now mounted from host
+# Ensure condor user can modify the lock files and run files as of 8.9.10
+chown condor $(condor_config_val log) $(condor_config_val lock) $(condor_config_val run)
+
+
+
+
 
 docker system prune -a -f
 exec "$(condor_config_val MASTER)" -f -t 2>&1

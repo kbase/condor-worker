@@ -241,6 +241,8 @@ def checkEndpoints():
             message = f"Couldn't reach {service}. {e}"
             exit_unsuccessfully(message)
 
+        
+
 
 
 def main():

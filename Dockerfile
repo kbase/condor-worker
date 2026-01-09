@@ -27,11 +27,6 @@ RUN wget -N https://github.com/kbase/dockerize/raw/master/dockerize-linux-amd64-
 #ADD DIRS
 RUN mkdir -p /var/run/condor && mkdir -p /var/log/condor && mkdir -p /var/lock/condor && mkdir -p /var/lib/condor/execute
 
-# These ARGs values are passed in via the docker build command
-ARG BUILD_DATE
-ARG VCS_REF
-ARG BRANCH=develop
-
 # Maybe you want: rm -rf /var/cache/yum, to also free up space taken by orphaned data from disabled or removed repos
 RUN rm -rf /var/cache/yum
 

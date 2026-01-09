@@ -28,3 +28,4 @@ Environmental variables to be set in rancher
 * SERVICE_ENDPOINT
 * DOCKER_CACHE
 * CGROUP_MEMORY_LIMIT_POLICY
+* USE_POOL_PASSWORD=yes
